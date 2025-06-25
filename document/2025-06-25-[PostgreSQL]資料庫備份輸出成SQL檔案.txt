@@ -1,0 +1,93 @@
+
+********** PowerShell 備份資料庫範本 **************
+
+# 設定 PostgreSQL 連線資訊
+$PGHost = "localhost"
+$PGPort = "5432"
+$PGUser = "postgres"
+$PGDatabaseToBackup = "concert_test"
+$BackupFileName = "concert_test_backup.sql"
+
+# 指定 pg_dump 的路徑 (如果不在系統 PATH 中)
+# 如果 pg_dump 已經在你的系統 PATH 中，你可以省略這一行
+# 例如：$PGDumpPath = "C:\Program Files\PostgreSQL\14\bin\pg_dump.exe"
+$PGDumpPath = "pg_dump"
+
+Write-Host "開始備份資料庫 '$PGDatabaseToBackup' 到 '$BackupFileName'..."
+
+# 執行 pg_dump 命令
+# 注意：這裡使用 Out-File 來導向輸出，而不是直接使用 ">"
+# `-Encoding UTF8` 是為了確保備份檔案的文字編碼正確
+try {
+    & $PGDumpPath -h $PGHost -p $PGPort -U $PGUser -F p $PGDatabaseToBackup | Out-File -FilePath $BackupFileName -Encoding UTF8
+
+    # 檢查備份檔案是否存在且不為空
+    if (Test-Path $BackupFileName -PathType Leaf) {
+        $FileSize = (Get-Item $BackupFileName).Length
+        if ($FileSize -gt 0) {
+            Write-Host "資料庫備份成功！備份檔案路徑：$(Get-Item $BackupFileName).FullName"
+            Write-Host "檔案大小：$([Math]::Round($FileSize / 1MB, 2)) MB"
+        } else {
+            Write-Warning "備份檔案 '$BackupFileName' 已建立但內容為空，備份可能失敗。請檢查錯誤訊息。"
+        }
+    } else {
+        Write-Error "備份檔案 '$BackupFileName' 未建立。請檢查錯誤訊息。"
+    }
+} catch {
+    Write-Error "執行 pg_dump 時發生錯誤：$($_.Exception.Message)"
+    Write-Host "請確認 PostgreSQL 服務是否運行，以及使用者帳號和密碼是否正確。"
+}
+
+Write-Host "備份程序結束。"
+
+
+***************PowerShell 匯入資料庫範本 *************************
+
+這個範本假設你已經在目標 PostgreSQL 伺服器上建立了一個空的目標資料庫，例如 mynew_concert_test。
+
+# 設定 PostgreSQL 連線資訊
+$PGHost = "localhost"
+$PGPort = "5432"
+$PGUser = "postgres"
+$PGTargetDatabase = "mynew_concert_test" # 必須是已建立的空資料庫
+$BackupFileName = "concert_test_backup.sql" # 之前備份的檔案
+
+# 指定 psql 的路徑 (如果不在系統 PATH 中)
+# 如果 psql 已經在你的系統 PATH 中，你可以省略這一行
+# 例如：$PSQLPath = "C:\Program Files\PostgreSQL\14\bin\psql.exe"
+$PSQLPath = "psql"
+
+# 檢查備份檔案是否存在
+if (-not (Test-Path $BackupFileName -PathType Leaf)) {
+    Write-Error "錯誤：備份檔案 '$BackupFileName' 不存在。請確認路徑是否正確。"
+    exit 1
+}
+
+Write-Host "開始匯入資料庫到 '$PGTargetDatabase'..."
+
+# 執行 psql 命令匯入資料
+try {
+    # -f 參數會讀取指定的檔案並執行其中的 SQL 指令
+    & $PSQLPath -h $PGHost -p $PGPort -U $PGUser -d $PGTargetDatabase -f $BackupFileName
+
+    Write-Host "資料庫匯入成功！資料已匯入到 '$PGTargetDatabase'。"
+} catch {
+    Write-Error "執行 psql 時發生錯誤：$($_.Exception.Message)"
+    Write-Host "請確認目標資料庫 '$PGTargetDatabase' 是否存在，以及使用者帳號和密碼是否正確。"
+}
+
+Write-Host "匯入程序結束。"
+
+
+*********************** 備註 *********************
+
+如何使用這些 PowerShell 範本？
+儲存檔案：將上述程式碼分別儲存為 .ps1 檔案，例如 backup_pg.ps1 和 restore_pg.ps1。
+修改變數：根據你的實際情況，修改腳本頂部的變數，例如 $PGHost (主機名稱)、$PGPort (埠號)、$PGUser (使用者名稱)、$PGDatabaseToBackup (要備份的資料庫名稱)、$BackupFileName (備份檔名)、$PGTargetDatabase (匯入的目標資料庫名稱) 以及 $PGDumpPath 和 $PSQLPath (如果你沒有將 PostgreSQL 的 bin 目錄添加到系統 PATH 中，這是非常重要的)。
+提示：PostgreSQL 的執行檔 (pg_dump.exe 和 psql.exe) 通常位於 C:\Program Files\PostgreSQL\<版本號>\bin 目錄下。
+開啟 PowerShell：以系統管理員身分執行 PowerShell。
+執行腳本：
+備份：導航到你儲存 backup_pg.ps1 的目錄，然後執行 ./backup_pg.ps1。
+匯入：導航到你儲存 restore_pg.ps1 的目錄，然後執行 ./restore_pg.ps1。
+輸入密碼：當腳本執行時，pg_dump 或 psql 會提示你輸入 PostgreSQL 使用者的密碼。
+這個範本提供了必要的程式碼和註解，讓你可以在 PowerShell 環境中輕鬆執行 PostgreSQL 的備份和匯入操作。
