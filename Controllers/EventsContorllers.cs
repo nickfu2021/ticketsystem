@@ -2,7 +2,9 @@ using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketSystemApi.Data;
+using TicketSystemApi.Dtos;
 using TicketSystemApi.Models;
+using TicketSystemApi.Services;
 
 namespace TicketSystemApi.Controllers;
 
@@ -10,23 +12,24 @@ namespace TicketSystemApi.Controllers;
 [Route("api/[controller]")]
 public class EventsController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IEventService _service;
 
-    public EventsController(AppDbContext context)
+    public EventsController(IEventService service)
     {
-        _context = context;
+        _service = service;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Events>>> GetEvents()
+    public async Task<ActionResult<IEnumerable<Events>>> GetAll()
     {
-        return await _context.Events.ToListAsync();
+        var events = await _service.GetAllAsync();
+        return Ok(events);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Events>> GetEvent(int id)
+    public async Task<ActionResult<Events>> GetById(int id)
     {
-        var evt = await _context.Events.FindAsync(id);
+        var evt = await _service.GetByIdAsync(id);
         if (evt == null)
         {
             return NotFound();
@@ -35,59 +38,47 @@ public class EventsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Events>> AddEvent(Events evt)
+    public async Task<ActionResult<Events>> Create([FromBody] EventCreateDto dto)
     {
+        var newEvent = new Events
+        {
+            Name = dto.Name,
+            Location = dto.Location,
+            EventDate = dto.EventDate,
+            TotalTickets = dto.TotalTickets,
+            Price = dto.Price
+        };
 
-        evt.EventDate = evt.EventDate.Date;
+        await _service.CreateAsync(newEvent);
 
-        _context.Events.Add(evt);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetEvent), new { id = evt.Id }, evt);
+        return CreatedAtAction(nameof(GetById), new { id = newEvent.Id }, newEvent);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateEvent(int id, Events evt)
+    public async Task<IActionResult> UpdateEvent(int id, [FromBody] EventUpdateDto dto)
     {
-        if (id != evt.Id)
+        var updated = new Events
         {
-            return BadRequest();
-        }
+            Id = id,
+            Name = dto.Name,
+            Location = dto.Location,
+            EventDate = dto.EventDate,
+            TotalTickets = dto.TotalTickets,
+            Price = dto.Price
+        };
 
-        _context.Entry(evt).State = EntityState.Modified;
+        var result = await _service.UpdateAsync(id, updated);
+        if (!result) return NotFound();
 
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_context.Events.Any(e => e.Id == id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
-
-        }
         return NoContent();
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteEvent(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var evt = await _context.Events.FindAsync(id);
-        if (evt == null)
-        {
-            return NotFound();
-        }
-
-        _context.Events.Remove(evt);
-        await _context.SaveChangesAsync();
+        var result = await _service.DeleteAsync(id);
+        if (!result) return NotFound();
 
         return NoContent();
-
     }
 }
