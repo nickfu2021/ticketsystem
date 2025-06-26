@@ -188,6 +188,7 @@ ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.order
 COPY public.customers (id, name, email) FROM stdin;
 1	????xiaoming@example.com
 2	?之蝳?dafu@example.com
+5	敺?	xuwei@example.com
 \.
 
 
@@ -199,7 +200,8 @@ COPY public.events (id, name, location, event_date, total_tickets, price) FROM s
 1	鈭?憭拇??望?	?啣?撠楊??2025-08-01	5000	2000.00
 2	?冽?急??望?	?啣?憭批楊??2025-12-31	10000	6400.00
 3	隡蔑瞍??擃?撌刻?	2025-08-30	20000	1600.00
-5	EXO瞍???啣?撌刻?	2025-06-20	3000	1600.00
+6	蝢郭瞍???啣?撣極??閬賭葉敹?2025-09-14	1500	3200.00
+7	yorushika??瞍???唬葉憡?敶勗?	2025-07-06	100	880.00
 \.
 
 
@@ -218,14 +220,14 @@ COPY public.orders (id, customer_id, event_id, quantity, order_time) FROM stdin;
 -- Name: customers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.customers_id_seq', 2, true);
+SELECT pg_catalog.setval('public.customers_id_seq', 8, true);
 
 
 --
 -- Name: events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.events_id_seq', 5, true);
+SELECT pg_catalog.setval('public.events_id_seq', 7, true);
 
 
 --

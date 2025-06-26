@@ -1,6 +1,5 @@
 using TicketSystemApi.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using FluentValidation.AspNetCore;
 using FluentValidation;
 using TicketSystemApi.Repositories;
@@ -20,6 +19,8 @@ options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")
 
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 var app = builder.Build();
 

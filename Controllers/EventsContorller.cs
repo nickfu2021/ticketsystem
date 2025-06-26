@@ -1,7 +1,4 @@
-using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TicketSystemApi.Data;
 using TicketSystemApi.Dtos;
 using TicketSystemApi.Models;
 using TicketSystemApi.Services;
@@ -10,37 +7,36 @@ namespace TicketSystemApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class EventsController : ControllerBase
+public class EventsController(IEventService service) : ControllerBase
 {
-    private readonly IEventService _service;
-
-    public EventsController(IEventService service)
-    {
-        _service = service;
-    }
+    private readonly IEventService _service = service;
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Events>>> GetAll()
+    public async Task<ActionResult<IEnumerable<Event>>> GetAll()
     {
-        var events = await _service.GetAllAsync();
-        return Ok(events);
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Events>> GetById(int id)
-    {
-        var evt = await _service.GetByIdAsync(id);
-        if (evt == null)
+        var result = await _service.GetAllAsync();
+        if (!result.Success)
         {
             return NotFound();
         }
-        return evt;
+        return Ok(result.Data);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Event>> GetById(int id)
+    {
+        var result = await _service.GetByIdAsync(id);
+        if (!result.Success)
+        {
+            return NotFound(new { message = result.ErrorMessage });
+        }
+        return Ok(result.Data);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Events>> Create([FromBody] EventCreateDto dto)
+    public async Task<ActionResult<Event>> Create([FromBody] EventCreateDto dto)
     {
-        var newEvent = new Events
+        var newEvent = new Event
         {
             Name = dto.Name,
             Location = dto.Location,
@@ -57,7 +53,12 @@ public class EventsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateEvent(int id, [FromBody] EventUpdateDto dto)
     {
-        var updated = new Events
+        if (id != dto.Id)
+        {
+            return BadRequest("路由ID與資料ID不相同");
+        }
+
+        var updated = new Event
         {
             Id = id,
             Name = dto.Name,
@@ -68,8 +69,10 @@ public class EventsController : ControllerBase
         };
 
         var result = await _service.UpdateAsync(id, updated);
-        if (!result) return NotFound();
-
+        if (!result.Success)
+        {
+            return NotFound(new { message = result.ErrorMessage });
+        }
         return NoContent();
     }
 
@@ -77,7 +80,10 @@ public class EventsController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _service.DeleteAsync(id);
-        if (!result) return NotFound();
+        if (!result.Success)
+        {
+            return NotFound(new { message = result.ErrorMessage });
+        }
 
         return NoContent();
     }

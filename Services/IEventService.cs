@@ -1,12 +1,13 @@
+using TicketSystemApi.Common;
 using TicketSystemApi.Models;
 
 namespace TicketSystemApi.Services;
 
 public interface IEventService
 {
-    Task<IEnumerable<Events>> GetAllAsync();
-    Task<Events?> GetByIdAsync(int id);
-    Task<Events> CreateAsync(Events evt);
-    Task<bool> UpdateAsync(int id, Events evt);
-    Task<bool> DeleteAsync(int id);
+    Task<ServiceResult<IEnumerable<Event>>> GetAllAsync();
+    Task<ServiceResult<Event>> GetByIdAsync(int id);
+    Task<ServiceResult<Event>> CreateAsync(Event evt);
+    Task<ServiceResult> UpdateAsync(int id, Event evt);
+    Task<ServiceResult> DeleteAsync(int id);
 }

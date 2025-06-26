@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TicketSystemApi.Models;
 
 [Table("events")]
-public class Events
+public class Event
 {
     [Key]
     [Column("id")]

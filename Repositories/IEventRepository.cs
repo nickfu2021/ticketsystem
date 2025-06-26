@@ -4,10 +4,10 @@ namespace TicketSystemApi.Repositories;
 
 public interface IEventRepository
 {
-    Task<IEnumerable<Events>> GetAllAsync();
-    Task<Events?> GetByIdAsync(int id);
-    Task AddAsync(Events evt);
-    Task UpdateAsync(Events evt);
-    Task DeleteAsync(Events evt);
+    Task<IEnumerable<Event>> GetAllAsync();
+    Task<Event?> GetByIdAsync(int id);
+    Task AddAsync(Event evt);
+    Task UpdateAsync(Event evt);
+    Task DeleteAsync(Event evt);
     Task<bool> ExistsAsync(int id);
 }

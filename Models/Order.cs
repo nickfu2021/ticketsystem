@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TicketSystemApi.Models;
+[Table("orders")]
 public class Order
 {
     [Key]
@@ -16,7 +17,7 @@ public class Order
     [Column("order_time")]
     public DateTime Ordertime { get; set; } = DateTime.Now;
 
-    public Events Event { get; set; } = null!;
+    public Event Event { get; set; } = null!;
     public Customer Customer { get; set; } = null!;
 
 }
