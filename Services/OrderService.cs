@@ -23,7 +23,7 @@ public class OrderService(IOrderRepository orderRepository, IEventRepository eve
 
     public async Task<ServiceResult<Order>> CreateAsync(Order order)
     {
-        // check 1: 是否有足夠的票數
+        // check 1: 確認所選活動存在
         var evt = await _eventRepository.GetByIdAsync(order.EventId);
         if (evt == null)
         {
@@ -44,9 +44,27 @@ public class OrderService(IOrderRepository orderRepository, IEventRepository eve
 
     public async Task<ServiceResult> UpdateAsync(int id, Order order)
     {
-        if (!await _orderRepository.ExistsAsync(id))
+        // check 1: 是否存在此訂單
+        var existingOrder = await _orderRepository.GetByIdAsync(id);
+        if (existingOrder == null)
         {
             return ServiceResult.Fail("此訂單不存在");
+        }
+
+        // check 2: 是否有足夠的票數
+        var evt = await _eventRepository.GetByIdAsync(order.EventId);
+        if (evt == null)
+        {
+            return ServiceResult.Fail("所選活動不存在");
+        }
+
+        // check 3: 確認更新後的票數不超過剩餘票數
+        int sold = await _orderRepository.GetSoldCountAsync(order.EventId);
+        int remaining = evt.TotalTickets - sold;
+
+        if (order.Quantity > remaining)
+        {
+            return ServiceResult.Fail($"所選活動剩餘票數不足，僅剩 {remaining} 張");
         }
 
         await _orderRepository.UpdateAsync(order);
