@@ -2,16 +2,30 @@ using Microsoft.AspNetCore.Mvc;
 using TicketSystemApi.Dtos;
 using TicketSystemApi.Models;
 using TicketSystemApi.Services;
+using AutoMapper;
 
 namespace TicketSystemApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class OrdersController(IOrderService orderService) : ControllerBase
+public class OrdersController(IOrderService orderService, IMapper mapper) : ControllerBase
 {
     private readonly IOrderService _orderService = orderService;
+    private readonly IMapper _mapper = mapper;
 
-    [HttpGet("{customerId}")]
+    [HttpGet("{id}")]
+    public async Task<ActionResult<OrderDto>> GetById(int id)
+    {
+        var result = await _orderService.GetByIdAsync(id);
+        if (!result.Success || result.Data == null)
+        {
+            return NotFound(new { message = result.ErrorMessage ?? "訂單不存在。" });
+        }
+
+        return Ok(_mapper.Map<OrderDto>(result.Data));
+    }
+
+    [HttpGet("customerId/{customerId}")]
     public async Task<ActionResult<IEnumerable<Order>>> GetByCustomerId(int customerId)
     {
         var result = await _orderService.GetByCustomerIdAsync(customerId);
@@ -19,53 +33,51 @@ public class OrdersController(IOrderService orderService) : ControllerBase
         {
             return NotFound(new { message = result.ErrorMessage });
         }
-        if (result.Data == null)
-        {
-            return Ok(Enumerable.Empty<OrderDto>());
-        }
-        var dtoList = result.Data.Select(o => new OrderDto
-        {
-            Id = o.Id,
-            EventId = o.EventId,
-            CustomerId = o.CustomerId,
-            Quantity = o.Quantity,
-            Ordertime = o.Ordertime
-        });
+
+        var dtoList = result.Data == null ? Enumerable.Empty<OrderDto>() : _mapper.Map<IEnumerable<OrderDto>>(result.Data);
+
         return Ok(dtoList);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Order>> Create([FromBody] OrderCreateDto orderCreateDto)
+    public async Task<ActionResult<OrderDto>> Create([FromBody] OrderCreateDto dto)
     {
 
-        var newOrder = new Order
+        var result = await _orderService.CreateAsync(dto);
+        if (!result.Success || result.Data == null)
         {
-            EventId = orderCreateDto.EventId,
-            CustomerId = orderCreateDto.CustomerId,
-            Quantity = orderCreateDto.Quantity,
-            Ordertime = DateTime.UtcNow
-        };
+            return BadRequest(new { message = result.ErrorMessage ?? "建立訂單時發生未知錯誤。" });
+        }
 
-        var result = await _orderService.CreateAsync(newOrder);
+        var responseDto = _mapper.Map<OrderDto>(result.Data);
+
+        return CreatedAtAction(nameof(GetById), new { id = responseDto.Id }, responseDto);
+
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] OrderUpdateDto dto)
+    {
+
+        var result = await _orderService.UpdateAsync(id, dto);
+
         if (!result.Success)
         {
             return BadRequest(new { message = result.ErrorMessage });
         }
 
-        if (result.Data == null)
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var result = await _orderService.DeleteAsync(id);
+        if (!result.Success)
         {
-            return StatusCode(500, new { message = "建立訂單時發生未知錯誤。" });
+            return NotFound(new { message = result.ErrorMessage ?? "刪除訂單時發生未知錯誤。" });
         }
-        var dto = new OrderDto
-        {
-            Id = result.Data.Id,
-            EventId = result.Data.EventId,
-            CustomerId = result.Data.CustomerId,
-            Quantity = result.Data.Quantity,
-            Ordertime = result.Data.Ordertime
-        };
 
-        return CreatedAtAction(nameof(GetByCustomerId), new { customerId = newOrder.CustomerId }, dto);
-
+        return NoContent();
     }
 }

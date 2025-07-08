@@ -10,12 +10,22 @@ public class OrderRepository(AppDbContext context) : IOrderRepository
 
     public async Task<IEnumerable<Order>> GetByCustomerIdAsync(int customer_id)
     {
-        return await _context.Orders.Where(o => o.CustomerId == customer_id).ToListAsync();
+        return await _context.Orders
+            .Include(o => o.Event)
+            .Include(o => o.Customer)
+            .Where(o => o.CustomerId == customer_id).ToListAsync();
     }
 
     public async Task<Order?> GetByIdAsync(int id)
     {
-        return await _context.Orders.FindAsync(id);
+        /*
+            FindAsync 是 EF Core 特別的方法，會直接用主鍵查詢，並且繞過你定義的 LINQ 條件與 Include
+            所以即使你加了 .Include(...)，它也不會作用，結果 Event 和 Customer 仍然是 null。
+        */
+        return await _context.Orders
+            .Include(o => o.Event)
+            .Include(o => o.Customer)
+            .FirstOrDefaultAsync(o => o.Id == id);
     }
 
     public async Task<Order> CreateAsync(Order order)
