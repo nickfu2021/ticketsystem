@@ -1,4 +1,4 @@
-﻿--
+--
 -- PostgreSQL database dump
 --
 
@@ -81,7 +81,7 @@ CREATE TABLE public.orders (
     customer_id integer,
     event_id integer,
     quantity integer NOT NULL,
-    order_time timestamp without time zone DEFAULT now()
+    order_time timestamp with time zone DEFAULT now()
 );
 
 
@@ -92,10 +92,10 @@ ALTER TABLE public.orders OWNER TO postgres;
 --
 
 CREATE VIEW public.customers_order AS
- SELECT c.name AS "摰Ｘ?迂",
-    e.name AS "瞍??蝔?,
-    o.quantity AS "撘菜",
-    (e.price * (o.quantity)::numeric) AS "蝮賡?憿?
+ SELECT c.name AS "客戶名稱",
+    e.name AS "演唱會名稱",
+    o.quantity AS "張數",
+    (e.price * (o.quantity)::numeric) AS "總金額"
    FROM ((public.orders o
      JOIN public.events e ON ((e.id = o.event_id)))
      JOIN public.customers c ON ((c.id = o.customer_id)));
@@ -154,8 +154,8 @@ ALTER SEQUENCE public.orders_id_seq OWNED BY public.orders.id;
 CREATE VIEW public.popular_events AS
 SELECT
     NULL::text AS name,
-    NULL::bigint AS "閮??,
-    NULL::bigint AS "蝮賢??;
+    NULL::bigint AS "訂單數",
+    NULL::bigint AS "總售出";
 
 
 ALTER VIEW public.popular_events OWNER TO postgres;
@@ -186,9 +186,10 @@ ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.order
 --
 
 COPY public.customers (id, name, email) FROM stdin;
-1	????xiaoming@example.com
-2	?之蝳?dafu@example.com
-5	敺?	xuwei@example.com
+1	王小明	xiaoming@example.com
+2	林大福	dafu@example.com
+5	徐薇	xuwei@example.com
+9	Karoyo	karoyo@example.com
 \.
 
 
@@ -197,11 +198,11 @@ COPY public.customers (id, name, email) FROM stdin;
 --
 
 COPY public.events (id, name, location, event_date, total_tickets, price) FROM stdin;
-1	鈭?憭拇??望?	?啣?撠楊??2025-08-01	5000	2000.00
-2	?冽?急??望?	?啣?憭批楊??2025-12-31	10000	6400.00
-3	隡蔑瞍??擃?撌刻?	2025-08-30	20000	1600.00
-6	蝢郭瞍???啣?撣極??閬賭葉敹?2025-09-14	1500	3200.00
-7	yorushika??瞍???唬葉憡?敶勗?	2025-07-06	100	880.00
+1	五月天演唱會	台北小巨蛋	2025-08-01	5000	2000.00
+2	周杰倫演唱會	台北大巨蛋	2025-12-31	10000	6400.00
+3	伍佰演唱會	高雄巨蛋	2025-08-30	20000	1600.00
+6	美波演唱會	新北市工商展覽中心	2025-09-14	1500	3200.00
+7	yorushika前世演唱會	台中威秀影城	2025-07-06	100	880.00
 \.
 
 
@@ -210,9 +211,12 @@ COPY public.events (id, name, location, event_date, total_tickets, price) FROM s
 --
 
 COPY public.orders (id, customer_id, event_id, quantity, order_time) FROM stdin;
-1	1	1	2	2025-06-24 11:08:52.996392
-2	2	2	3	2025-06-24 11:40:10.790283
-3	1	2	1	2025-06-24 11:40:14.189284
+2	2	2	3	2025-06-24 11:40:10.790283+08
+3	1	2	1	2025-06-24 11:40:14.189284+08
+5	5	7	3	2025-07-02 17:39:04.852422+08
+1	1	1	5	2025-06-24 11:08:52.996392+08
+10	9	7	5	2025-07-08 10:01:58.066551+08
+11	5	3	3	2025-07-08 11:57:22.808373+08
 \.
 
 
@@ -220,7 +224,7 @@ COPY public.orders (id, customer_id, event_id, quantity, order_time) FROM stdin;
 -- Name: customers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.customers_id_seq', 8, true);
+SELECT pg_catalog.setval('public.customers_id_seq', 9, true);
 
 
 --
@@ -234,7 +238,7 @@ SELECT pg_catalog.setval('public.events_id_seq', 7, true);
 -- Name: orders_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.orders_id_seq', 3, true);
+SELECT pg_catalog.setval('public.orders_id_seq', 14, true);
 
 
 --
@@ -275,8 +279,8 @@ ALTER TABLE ONLY public.orders
 
 CREATE OR REPLACE VIEW public.popular_events AS
  SELECT e.name,
-    count(o.id) AS "閮??,
-    sum(o.quantity) AS "蝮賢??
+    count(o.id) AS "訂單數",
+    sum(o.quantity) AS "總售出"
    FROM (public.events e
      JOIN public.orders o ON ((e.id = o.event_id)))
   GROUP BY e.id
