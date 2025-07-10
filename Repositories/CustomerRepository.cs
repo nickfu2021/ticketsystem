@@ -41,11 +41,6 @@ public class CustomerRepository(AppDbContext context) : ICustomerRepository
         return await _context.Customers.AnyAsync(e => e.Id == id);
     }
 
-    public async Task<bool> HasOrderAsync(int customerId)
-    {
-        return await _context.Orders.AnyAsync(o => o.Id == customerId);
-    }
-
     public async Task<bool> EmailExists(string email)
     {
         return await _context.Customers.AnyAsync(c => c.Email == email);

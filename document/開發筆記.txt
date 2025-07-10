@@ -1,1 +1,6 @@
 退票流程
+
+dotnet add package AutoMapper.Extensions.Microsoft.DependencyInjection
+>> 1.Program.cs 要增加 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+>> 2.要自行建一個 Profiles 資料夾，並把 Modle 與 dto 對應先設定好
+>> 3.在 Service 層寫上轉換格式，例: var customer = _mapper.Map<Customer>(dto); 

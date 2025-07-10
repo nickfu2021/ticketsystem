@@ -12,7 +12,7 @@ public class CustomersController(ICustomerService service) : ControllerBase
     private readonly ICustomerService _service = service;
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Customer>>> GetAll()
+    public async Task<ActionResult<IEnumerable<CustomerDto>>> GetAll()
     {
         var result = await _service.GetAllAsync();
         if (!result.Success)
@@ -23,7 +23,7 @@ public class CustomersController(ICustomerService service) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Customer>> GetById(int id)
+    public async Task<ActionResult<CustomerDto>> GetById(int id)
     {
         var result = await _service.GetByIdAsync(id);
         if (!result.Success)
@@ -34,19 +34,16 @@ public class CustomersController(ICustomerService service) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Customer>> Create([FromBody] CustomerCreateDto dto)
+    public async Task<ActionResult<CustomerDto>> Create([FromBody] CustomerCreateDto dto)
     {
-        var newCustomer = new Customer
-        {
-            Name = dto.Name,
-            Email = dto.Email
-        };
 
-        var result = await _service.CreateAsync(newCustomer);
-        if (!result.Success)
+        var result = await _service.CreateAsync(dto);
+        if (!result.Success || result.Data == null)
         {
             return BadRequest(new { message = result.ErrorMessage });
         }
+
+        var newCustomer = result.Data;
 
         return CreatedAtAction(nameof(GetById), new { id = newCustomer.Id }, newCustomer);
     }
@@ -54,19 +51,8 @@ public class CustomersController(ICustomerService service) : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, [FromBody] CustomerUpdateDto dto)
     {
-        if (id != dto.Id)
-        {
-            return BadRequest(new { message = "路由ID與資料ID不一致" });
-        }
 
-        var updated = new Customer
-        {
-            Id = dto.Id,
-            Name = dto.Name,
-            Email = dto.Email
-        };
-
-        var result = await _service.UpdateAsync(id, updated);
+        var result = await _service.UpdateAsync(id, dto);
         if (!result.Success)
         {
             return NotFound(new { message = result.ErrorMessage });
