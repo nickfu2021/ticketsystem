@@ -8,6 +8,11 @@ public class OrderRepository(AppDbContext context) : IOrderRepository
 {
     private readonly AppDbContext _context = context;
 
+    public async Task<bool> HasOrderForEventAsync(int eventId)
+    {
+        return await _context.Orders.AnyAsync(o => o.EventId == eventId);
+    }
+
     public async Task<IEnumerable<Order>> GetByCustomerIdAsync(int customer_id)
     {
         return await _context.Orders
@@ -55,5 +60,10 @@ public class OrderRepository(AppDbContext context) : IOrderRepository
     public async Task<int> GetSoldCountAsync(int eventId)
     {
         return await _context.Orders.Where(o => o.EventId == eventId).SumAsync(o => o.Quantity);
+    }
+
+    public async Task<bool> HasOrderAsync(int customerId, int eventId)
+    {
+        return await _context.Orders.AnyAsync(o => o.CustomerId == customerId && o.EventId == eventId);
     }
 }

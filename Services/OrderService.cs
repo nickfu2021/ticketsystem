@@ -14,29 +14,32 @@ public class OrderService(IOrderRepository orderRepository, IEventRepository eve
 
     private readonly IMapper _mapper = mapper;
 
-    public async Task<ServiceResult<Order>> GetByIdAsync(int id)
+    public async Task<ServiceResult<OrderDto>> GetByIdAsync(int id)
     {
         var order = await _orderRepository.GetByIdAsync(id);
         if (order == null)
         {
-            return ServiceResult<Order>.Fail("此訂單不存在");
+            return ServiceResult<OrderDto>.Fail("此訂單不存在");
         }
 
-        return ServiceResult<Order>.Ok(order);
+        var respDto = _mapper.Map<OrderDto>(order);
+
+        return ServiceResult<OrderDto>.Ok(respDto);
     }
 
-    public async Task<ServiceResult<IEnumerable<Order>>> GetByCustomerIdAsync(int customerId)
+    public async Task<ServiceResult<IEnumerable<OrderDto>>> GetByCustomerIdAsync(int customerId)
     {
         var orders = await _orderRepository.GetByCustomerIdAsync(customerId);
         if (!orders.Any())
         {
-            return ServiceResult<IEnumerable<Order>>.Fail("此客戶無任何訂單");
+            return ServiceResult<IEnumerable<OrderDto>>.Fail("此客戶無任何訂單");
         }
 
-        return ServiceResult<IEnumerable<Order>>.Ok(orders);
+        var respDto = _mapper.Map<IEnumerable<OrderDto>>(orders);
+        return ServiceResult<IEnumerable<OrderDto>>.Ok(respDto);
     }
 
-    public async Task<ServiceResult<Order>> CreateAsync(OrderCreateDto dto)
+    public async Task<ServiceResult<OrderDto>> CreateAsync(OrderCreateDto dto)
     {
         var order = _mapper.Map<Order>(dto);
         order.Ordertime = DateTime.UtcNow;
@@ -45,25 +48,34 @@ public class OrderService(IOrderRepository orderRepository, IEventRepository eve
         var evt = await _eventRepository.GetByIdAsync(order.EventId);
         if (evt == null)
         {
-            return ServiceResult<Order>.Fail("所選活動不存在");
+            return ServiceResult<OrderDto>.Fail("所選活動不存在");
         }
 
-        // check 2: 是否有足夠的票數
+        // check 2: 確認客戶是否已經有此活動的訂單
+        if (await _orderRepository.HasOrderAsync(order.CustomerId, order.EventId))
+        {
+            return ServiceResult<OrderDto>.Fail("客戶已經有此活動的訂單，無法重複訂購");
+        }
+
+        // check 3: 是否有足夠的票數
         int sold = await _orderRepository.GetSoldCountAsync(order.EventId);
         int remaining = evt.TotalTickets - sold;
         if (order.Quantity > remaining)
         {
-            return ServiceResult<Order>.Fail($"所選活動剩餘票數不足，僅剩 {remaining} 張");
+            return ServiceResult<OrderDto>.Fail($"所選活動剩餘票數不足，僅剩 {remaining} 張");
         }
 
-        await _orderRepository.CreateAsync(order);
+        var createOrder = await _orderRepository.CreateAsync(order);
 
-        var fullOrder = await _orderRepository.GetByIdAsync(order.Id);
-        if (fullOrder == null)
+        var result = await _orderRepository.GetByIdAsync(createOrder.Id);
+        if (result == null)
         {
-            return ServiceResult<Order>.Fail("訂單建立後查詢失敗");
+            return ServiceResult<OrderDto>.Fail("訂單建立後查詢失敗");
         }
-        return ServiceResult<Order>.Ok(fullOrder);
+
+        var respDto = _mapper.Map<OrderDto>(result);
+
+        return ServiceResult<OrderDto>.Ok(respDto);
     }
 
     public async Task<ServiceResult> UpdateAsync(int id, OrderUpdateDto dto)

@@ -1,6 +1,40 @@
 退票流程
+訂單編號
+同一個客戶，不能有同一場演唱會的兩筆訂單?
+
+
+
+Q:怎麼將業務邏輯與資料庫操作分離?
+
+Q:要怎麼驗證每個欄位傳入資料格式?
+
+Q:直接回傳 Models 很危險?
+
+Q:每次都回傳資料都要實作一次 Dto 很麻煩?
 
 dotnet add package AutoMapper.Extensions.Microsoft.DependencyInjection
 >> 1.Program.cs 要增加 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 >> 2.要自行建一個 Profiles 資料夾，並把 Modle 與 dto 對應先設定好
 >> 3.在 Service 層寫上轉換格式，例: var customer = _mapper.Map<Customer>(dto); 
+
+Q:validators 的訊息 和 ServiceResult 的訊息不一怎麼辦?
+
+
+HTTP 請求
+   ↓
+UseCors
+   ↓
+UseAuthentication
+   ↓
+【你自己的 ValidationExceptionMiddleware】
+   ↓
+UseAuthorization
+   ↓
+MVC Routing / Controller
+   ↓
+HTTP 回應
+
+**** 延伸問題 ****
+
+MathOp 是像 MathOp Calculate = Add 這樣直接「指派方法」
+但 RequestDelegate _next 沒有這樣明寫「= 某方法」，為什麼還可以呼叫 _next(context)？

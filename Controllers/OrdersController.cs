@@ -26,7 +26,7 @@ public class OrdersController(IOrderService orderService, IMapper mapper) : Cont
     }
 
     [HttpGet("customerId/{customerId}")]
-    public async Task<ActionResult<IEnumerable<Order>>> GetByCustomerId(int customerId)
+    public async Task<ActionResult<IEnumerable<OrderDto>>> GetByCustomerId(int customerId)
     {
         var result = await _orderService.GetByCustomerIdAsync(customerId);
         if (!result.Success)

@@ -5,6 +5,7 @@ using FluentValidation;
 using TicketSystemApi.Repositories;
 using TicketSystemApi.Services;
 using TicketSystemApi.Validators;
+using TicketSystemApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,8 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 
 var app = builder.Build();
+
+app.UseMiddleware<ValidationExceptionMiddleware>();
 
 // Swagger 僅在開發時啟用
 if (app.Environment.IsDevelopment())

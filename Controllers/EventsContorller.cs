@@ -12,7 +12,7 @@ public class EventsController(IEventService service) : ControllerBase
     private readonly IEventService _service = service;
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Event>>> GetAll()
+    public async Task<ActionResult<IEnumerable<EventDto>>> GetAll()
     {
         var result = await _service.GetAllAsync();
         if (!result.Success)
@@ -23,7 +23,7 @@ public class EventsController(IEventService service) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Event>> GetById(int id)
+    public async Task<ActionResult<EventDto>> GetById(int id)
     {
         var result = await _service.GetByIdAsync(id);
         if (!result.Success)
@@ -34,18 +34,16 @@ public class EventsController(IEventService service) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Event>> Create([FromBody] EventCreateDto dto)
+    public async Task<ActionResult<EventDto>> Create([FromBody] EventCreateDto dto)
     {
-        var newEvent = new Event
-        {
-            Name = dto.Name,
-            Location = dto.Location,
-            EventDate = dto.EventDate,
-            TotalTickets = dto.TotalTickets,
-            Price = dto.Price
-        };
+        var result = await _service.CreateAsync(dto);
 
-        await _service.CreateAsync(newEvent);
+        if (!result.Success || result.Data == null)
+        {
+            return BadRequest(new { message = result.ErrorMessage });
+        }
+
+        var newEvent = result.Data;
 
         return CreatedAtAction(nameof(GetById), new { id = newEvent.Id }, newEvent);
     }
@@ -53,26 +51,13 @@ public class EventsController(IEventService service) : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateEvent(int id, [FromBody] EventUpdateDto dto)
     {
-        if (id != dto.Id)
-        {
-            return BadRequest("路由ID與資料ID不相同");
-        }
+        var result = await _service.UpdateAsync(id, dto);
 
-        var updated = new Event
-        {
-            Id = id,
-            Name = dto.Name,
-            Location = dto.Location,
-            EventDate = dto.EventDate,
-            TotalTickets = dto.TotalTickets,
-            Price = dto.Price
-        };
-
-        var result = await _service.UpdateAsync(id, updated);
         if (!result.Success)
         {
             return NotFound(new { message = result.ErrorMessage });
         }
+
         return NoContent();
     }
 
@@ -80,6 +65,7 @@ public class EventsController(IEventService service) : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _service.DeleteAsync(id);
+
         if (!result.Success)
         {
             return NotFound(new { message = result.ErrorMessage });
