@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using TicketSystemApi.Common;
 
 namespace TicketSystemApi.Middleware;
 
@@ -14,46 +15,45 @@ public class ValidationExceptionMiddleware
 
     public async Task Invoke(HttpContext context)
     {
-        // 建立 response 捕捉
         var originalBodyStream = context.Response.Body;
-
         using var memoryStream = new MemoryStream();
         context.Response.Body = memoryStream;
 
-        await _next(context); // 繼續往下執行
+        await _next(context);
 
-        // 假如是 ModelState 錯誤（400）
-        if (context.Response.StatusCode == 400 && context.Response.HasStarted == false)
+        // 攔截 FluentValidation 的 ModelState 錯誤（400 BadRequest）
+        if (context.Response.StatusCode == 400 && !context.Response.HasStarted)
         {
             memoryStream.Seek(0, SeekOrigin.Begin);
             var originalResponse = await new StreamReader(memoryStream).ReadToEndAsync();
 
-            if (originalResponse.Contains("\"errors\"")) // 粗略判斷是否是 FluentValidation 錯誤
+            if (originalResponse.Contains("\"errors\""))
             {
                 var errors = JsonSerializer.Deserialize<ValidationProblemDetails>(originalResponse);
 
                 if (errors?.Errors != null)
                 {
-                    var response = new
-                    {
-                        success = false,
-                        message = "驗證失敗",
-                        errors = errors.Errors.SelectMany(kvp => kvp.Value.Select(msg => new
+                    var fieldErrors = errors.Errors
+                        .SelectMany(kvp => kvp.Value.Select(msg => new FieldError
                         {
-                            field = kvp.Key,
-                            message = msg
+                            Field = kvp.Key,
+                            Message = msg
                         }))
-                    };
+                        .ToList();
+
+                    var resultObj = ServiceResult<object>.Fail("欄位驗證錯誤", fieldErrors);
 
                     context.Response.ContentType = "application/json";
                     context.Response.Body = originalBodyStream;
-                    await context.Response.WriteAsJsonAsync(response);
+                    context.Response.StatusCode = 400;
+
+                    await context.Response.WriteAsJsonAsync(resultObj);
                     return;
                 }
             }
         }
 
-        // 非驗證錯誤 → 還原原本回傳
+        // 回傳原始內容
         memoryStream.Seek(0, SeekOrigin.Begin);
         await memoryStream.CopyToAsync(originalBodyStream);
         context.Response.Body = originalBodyStream;

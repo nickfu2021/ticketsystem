@@ -19,7 +19,7 @@ public class OrdersController(IOrderService orderService, IMapper mapper) : Cont
         var result = await _orderService.GetByIdAsync(id);
         if (!result.Success || result.Data == null)
         {
-            return NotFound(new { message = result.ErrorMessage ?? "訂單不存在。" });
+            return NotFound(result);
         }
 
         return Ok(_mapper.Map<OrderDto>(result.Data));
@@ -31,7 +31,7 @@ public class OrdersController(IOrderService orderService, IMapper mapper) : Cont
         var result = await _orderService.GetByCustomerIdAsync(customerId);
         if (!result.Success)
         {
-            return NotFound(new { message = result.ErrorMessage });
+            return NotFound(result);
         }
 
         var dtoList = result.Data == null ? Enumerable.Empty<OrderDto>() : _mapper.Map<IEnumerable<OrderDto>>(result.Data);
@@ -46,7 +46,7 @@ public class OrdersController(IOrderService orderService, IMapper mapper) : Cont
         var result = await _orderService.CreateAsync(dto);
         if (!result.Success || result.Data == null)
         {
-            return BadRequest(new { message = result.ErrorMessage ?? "建立訂單時發生未知錯誤。" });
+            return BadRequest(result);
         }
 
         var responseDto = _mapper.Map<OrderDto>(result.Data);
@@ -63,7 +63,7 @@ public class OrdersController(IOrderService orderService, IMapper mapper) : Cont
 
         if (!result.Success)
         {
-            return BadRequest(new { message = result.ErrorMessage });
+            return BadRequest(result);
         }
 
         return NoContent();
@@ -75,7 +75,7 @@ public class OrdersController(IOrderService orderService, IMapper mapper) : Cont
         var result = await _orderService.DeleteAsync(id);
         if (!result.Success)
         {
-            return NotFound(new { message = result.ErrorMessage ?? "刪除訂單時發生未知錯誤。" });
+            return NotFound(result);
         }
 
         return NoContent();
