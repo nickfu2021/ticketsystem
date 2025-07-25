@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  ticketsystemapi:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    container_name: ticketsystemapi
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    networks:
+      - devnet
+    volumes:
+      - .:/workspace
+
+  db:
+    image: postgres:15
+    container_name: my-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: qwer1@34
+      POSTGRES_DB: concert_test
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - devnet
+
+networks:
+  devnet:
+
+volumes:
+  pgdata:
