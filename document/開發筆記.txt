@@ -38,3 +38,58 @@ HTTP 回應
 
 MathOp 是像 MathOp Calculate = Add 這樣直接「指派方法」
 但 RequestDelegate _next 沒有這樣明寫「= 某方法」，為什麼還可以呼叫 _next(context)？
+
+
+
+
+------------------------------------------------------------
+
+
+. 完成基本 CRUD（Events → Customers → Orders）
+每個資料表都先有 GET / POST / PUT / DELETE API
+
+重點：先練習資料關聯（Orders 跟 Events、Customers 的關聯）
+
+👉 這是你後面前端與部署最重要的基礎。
+
+🟩 2. 加上 DTO + 驗證 + 錯誤處理
+功能	說明
+DTO	把 API 回傳與輸入做乾淨封裝
+驗證（Validation）	Required, MaxLength, 自訂驗證邏輯
+自訂錯誤訊息	統一格式的錯誤（例如 400 BadRequest）
+
+👉 這可以讓你的 API 更「真實」，也對前端更友善。
+
+🟨 3. 簡單前端介面（建議 Next.js）
+不用一開始就很完整，能查詢、送表單就可以
+
+建議使用 Next.js + fetch or axios 叫 API
+
+頁面：查詢活動、建立訂單、小表單輸入即可
+
+👉 這一步會讓你體驗「前後端分離」的整合流程。
+
+🟨 4. 雲端部署（建議使用 render、fly.io、Railway）
+後端部署 ASP.NET Core 專案
+
+PostgreSQL 可以用：
+
+Railway（超快）
+
+Supabase（免費 PostgreSQL）
+
+ElephantSQL（免費小量 DB）
+
+👉 到這一步，你會把整個系統從「自己開發」→「別人可用」的體驗完整跑完！
+
+建議練功順序（含推薦工具）
+階段	項目	工具/技術
+✅ 必做	Events / Customers / Orders CRUD	EF Core + Controller
+✅ 必做	DTO + 驗證 + 錯誤處理	C# record / FluentValidation
+🔶 可漸進完成	簡單前端	Next.js + Tailwind / axios
+🔶 可漸進完成	雲端部署	Railway / fly.io / Supabase
+
+
+**** 2025/7/30 ****
+
+我現在遇到一個問題，我提供了修改 customers 的 put api，但當我改了 name 訂單 orders 表格儲存的 customername 還是舊的

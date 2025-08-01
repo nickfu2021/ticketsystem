@@ -17,7 +17,7 @@ public class EventsController(IEventService service) : ControllerBase
         var result = await _service.GetAllAsync();
         if (!result.Success)
         {
-            return NotFound();
+            return NotFound(result);
         }
         return Ok(result.Data);
     }
@@ -28,7 +28,7 @@ public class EventsController(IEventService service) : ControllerBase
         var result = await _service.GetByIdAsync(id);
         if (!result.Success)
         {
-            return NotFound(new { message = result.ErrorMessage });
+            return NotFound(result);
         }
         return Ok(result.Data);
     }
@@ -40,7 +40,7 @@ public class EventsController(IEventService service) : ControllerBase
 
         if (!result.Success || result.Data == null)
         {
-            return BadRequest(new { message = result.ErrorMessage });
+            return BadRequest(result);
         }
 
         var newEvent = result.Data;
@@ -49,13 +49,13 @@ public class EventsController(IEventService service) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateEvent(int id, [FromBody] EventUpdateDto dto)
+    public async Task<IActionResult> Update(int id, [FromBody] EventUpdateDto dto)
     {
         var result = await _service.UpdateAsync(id, dto);
 
         if (!result.Success)
         {
-            return NotFound(new { message = result.ErrorMessage });
+            return NotFound(result);
         }
 
         return NoContent();
@@ -68,7 +68,7 @@ public class EventsController(IEventService service) : ControllerBase
 
         if (!result.Success)
         {
-            return NotFound(new { message = result.ErrorMessage });
+            return NotFound(result);
         }
 
         return NoContent();

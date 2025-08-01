@@ -17,7 +17,7 @@ public class CustomersController(ICustomerService service) : ControllerBase
         var result = await _service.GetAllAsync();
         if (!result.Success)
         {
-            return NotFound(new { message = result.ErrorMessage });
+            return NotFound(result);
         }
         return Ok(result.Data);
     }
@@ -28,7 +28,7 @@ public class CustomersController(ICustomerService service) : ControllerBase
         var result = await _service.GetByIdAsync(id);
         if (!result.Success)
         {
-            return NotFound(new { message = result.ErrorMessage });
+            return NotFound(result);
         }
         return Ok(result.Data);
     }
@@ -40,7 +40,7 @@ public class CustomersController(ICustomerService service) : ControllerBase
         var result = await _service.CreateAsync(dto);
         if (!result.Success || result.Data == null)
         {
-            return BadRequest(new { message = result.ErrorMessage });
+            return BadRequest(result);
         }
 
         var newCustomer = result.Data;
@@ -55,7 +55,7 @@ public class CustomersController(ICustomerService service) : ControllerBase
         var result = await _service.UpdateAsync(id, dto);
         if (!result.Success)
         {
-            return NotFound(new { message = result.ErrorMessage });
+            return NotFound(result);
         }
 
         return NoContent();
@@ -67,7 +67,7 @@ public class CustomersController(ICustomerService service) : ControllerBase
         var result = await _service.DeleteAsync(id);
         if (!result.Success)
         {
-            return NotFound(new { message = result.ErrorMessage });
+            return NotFound(result);
         }
 
         return NoContent();
