@@ -62,12 +62,12 @@ public class CustomerService(ICustomerRepository customerRepository, IOrderRepos
 
         if (!await _customerRepository.ExistsAsync(id))
         {
-            return ServiceResult<Customer>.Fail("此客戶不存在");
+            return ServiceResult.Fail("此客戶不存在");
         }
 
         if (await _customerRepository.EmailExists(customer.Email))
         {
-            return ServiceResult<Customer>.Fail("此電子郵件已被註冊");
+            return ServiceResult.Fail("此電子郵件已被註冊");
         }
 
         await _customerRepository.UpdateAsync(customer);
