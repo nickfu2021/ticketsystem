@@ -37,7 +37,20 @@ builder.Services.AddAuthentication();
 
 builder.Services.AddControllers();
 
-builder.Services.AddFluentValidationAutoValidation().AddFluentValidationClientsideAdapters();
+/*
+AddFluentValidationAutoValidation
+啟用 伺服器端自動驗證
+ASP.NET Core 在模型綁定（ModelState）時，會自動執行對應的 Validator。
+你不需要在 Controller 中手動呼叫 validator.Validate(...)
+這是 FluentValidation 最基本的功能
+
+.AddFluentValidationClientsideAdapters()
+啟用 前端 JavaScript 客戶端驗證支援（例如 Razor Pages / Blazor Server）
+會把你設定的規則自動轉換成 HTML data-val-* 屬性
+僅適用於 Razor Page、Blazor Server，搭配 jQuery Validation 使用
+如果你用的是 API + Vue/React/Next.js，就不需要這個
+*/
+builder.Services.AddFluentValidationAutoValidation();
 //builder.Services.AddValidatorsFromAssemblyContaining<Program>(); 避免耦合 Program
 builder.Services.AddValidatorsFromAssemblyContaining<OrderUpdateDtoValidator>();    //只要註冊其中「任一個」即可掃描整個專案的 Validators
 
@@ -47,6 +60,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IPostalRepository, PostalRepository>();
+builder.Services.AddScoped<ILocationRepository, LocationRepository>();
+builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();

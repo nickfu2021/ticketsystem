@@ -1,6 +1,9 @@
 using System.Data;
 using FluentValidation;
+using TicketSystemApi.Data;
 using TicketSystemApi.Dtos;
+using Microsoft.EntityFrameworkCore;
+using TicketSystemApi.Services;
 
 namespace TicketSystemApi.validators;
 
@@ -8,6 +11,7 @@ public class UserCreateDtoValidator : AbstractValidator<UserCreateDto>
 {
     public UserCreateDtoValidator()
     {
+
         RuleFor(u => u.IdNumber)
             .NotEmpty().WithMessage("身分證號碼不可空白")
             .Must(IsValidTaiwanId).WithMessage("身分證格式錯誤");
@@ -30,10 +34,16 @@ public class UserCreateDtoValidator : AbstractValidator<UserCreateDto>
             .WithMessage("聯絡電話格式須為市話 (含區碼) 或 10 碼手機號碼");
         RuleFor(u => u.MobileNumber)
             .NotEmpty().WithMessage("手機號碼不可空白")
-            .Matches(@"^09\d{8}$").WithMessage("手機號碼格式不正確");  
-
-
-
+            .Matches(@"^09\d{8}$").WithMessage("手機號碼格式不正確");
+        RuleFor(u => u.PostalCode)
+               .NotEmpty().WithMessage("郵遞區號不可空白")
+               .Matches(@"^\d{3}$").WithMessage("郵遞區號格式須為 3 碼數字");
+        RuleFor(u => u.City)
+            .NotEmpty().WithMessage("縣市不可空白");
+        RuleFor(u => u.District)
+            .NotEmpty().WithMessage("鄉鎮區不可空白");
+        RuleFor(u => u.AddressDetail)
+            .NotEmpty().WithMessage("詳細地址不可空白");
     }
 
     /// <summary>

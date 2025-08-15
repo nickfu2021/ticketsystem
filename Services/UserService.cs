@@ -6,9 +6,10 @@ using TicketSystemApi.Repositories;
 
 namespace TicketSystemApi.Services;
 
-public class UserService(IUserRepository userRepository, IMapper mapper) : IUserService
+public class UserService(IUserRepository userRepository, IPostalRepository postalRepository, IMapper mapper) : IUserService
 {
     private readonly IUserRepository _userRepository = userRepository;
+    private readonly IPostalRepository _postalRepository = postalRepository;
     private readonly IMapper _mapper = mapper;
     public async Task<ServiceResult<IEnumerable<UserDto>>> GetAllAsync()
     {
@@ -36,6 +37,12 @@ public class UserService(IUserRepository userRepository, IMapper mapper) : IUser
 
     public async Task<ServiceResult<UserDto>> CreateAsync(UserCreateDto dto)
     {
+        bool postalValid = await _postalRepository.ExistsZipCityDistrictAsync(dto.PostalCode, dto.City, dto.District);
+        if (!postalValid)
+        {
+            return ServiceResult<UserDto>.Fail("郵遞區號與縣市/鄉鎮區不符");
+        }
+
         var user = _mapper.Map<User>(dto);
 
         if (await _userRepository.EmailExists(user.Email))
@@ -62,13 +69,18 @@ public class UserService(IUserRepository userRepository, IMapper mapper) : IUser
         {
             return ServiceResult.Fail("使用者不存在");
         }
-        
-        if (await _userRepository.EmailExists(dto.Email))
+
+        bool postalValid = await _postalRepository.ExistsZipCityDistrictAsync(dto.PostalCode, dto.City, dto.District);
+        if (!postalValid)
         {
-            return ServiceResult.Fail("信箱已被註冊");
+            return ServiceResult.Fail("郵遞區號與縣市/鄉鎮區不符");
         }
 
         _mapper.Map(dto, existingUser);
+
+        existingUser.Address = $"{dto.PostalCode}{dto.City}{dto.District}{dto.AddressDetail}";
+
+        existingUser.UpdatedAt = DateTime.UtcNow;
 
         await _userRepository.UpdateAsync(existingUser);
         return ServiceResult.Ok();
