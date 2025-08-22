@@ -50,11 +50,27 @@ public class UserService(IUserRepository userRepository, IPostalRepository posta
             return ServiceResult<UserDto>.Fail("此信箱已被註冊");
         }
 
+        if (await _userRepository.IdnumberExists(user.IdNumber))
+        {
+            return ServiceResult<UserDto>.Fail("此身分證號碼已被註冊");
+        }
+
+        //string addressDetail = $"{dto.City}{dto.District}{dto.AddressDetail}";
+        //user.Address = addressDetail;
+
+        //當你在 AutoMapper 的 Profile 中加上這段：
+        //.ForMember(dest => dest.Address,
+        //    opt => opt.MapFrom(src => $"{src.City}{src.District}{src.AddressDetail}"))
+        //AutoMapper 會在執行：
+        //var newUser = _mapper.Map<User>(dto);
+        //時，自動幫你把 dto.City、dto.District、dto.AddressDetail 合併成一個字串，然後指派給 newUser.Address。
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
         await _userRepository.CreateAsync(user);
         var respDto = _mapper.Map<UserDto>(user);
 
         return ServiceResult<UserDto>.Ok(respDto);
-
     }
 
     public async Task<ServiceResult> UpdateAsync(int id, UserUpdateDto dto)
@@ -78,8 +94,7 @@ public class UserService(IUserRepository userRepository, IPostalRepository posta
 
         _mapper.Map(dto, existingUser);
 
-        existingUser.Address = $"{dto.PostalCode}{dto.City}{dto.District}{dto.AddressDetail}";
-
+        //existingUser.Address = $"{dto.City}{dto.District}{dto.AddressDetail}";
         existingUser.UpdatedAt = DateTime.UtcNow;
 
         await _userRepository.UpdateAsync(existingUser);

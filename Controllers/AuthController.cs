@@ -1,33 +1,39 @@
 using Microsoft.AspNetCore.Mvc;
-using TicketSystemApi.Services.Auth;
 using TicketSystemApi.Dtos;
-using TicketSystemApi.Common;
+using TicketSystemApi.Services.Auth;
 
-namespace TicketSystemApi.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class AuthController : ControllerBase
+namespace TicketSystemApi.Controllers
 {
-    private readonly JwtTokenService _jwtTokenService;
-
-    public AuthController(JwtTokenService jwtTokenService)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AuthController(IAuthService service) : ControllerBase
     {
-        _jwtTokenService = jwtTokenService;
-    }
+        private readonly IAuthService _service = service;
 
-    [HttpPost]
-    public IActionResult Login([FromBody] LoginDto dto)
-    {
-          if (dto.Username == "admin" && dto.Password == "123456")
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        {
+            var result = await _service.LoginAsync(dto.Email, dto.Password);
+            if (result == null)
+                return Unauthorized("帳號或密碼錯誤");
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("register")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)] //Swagger 註解（加強開發體驗）
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+        {
+            var result = await _service.RegisterAsync(dto);
+            if (!result.Success)
             {
-                var token = _jwtTokenService.GenerateToken(userId: "1", role: "Admin");
-
-                var result = ServiceResult<string>.Ok(token);
-                return Ok(result);
+                return BadRequest(result.ErrorMessage);
             }
 
-            var failResult = ServiceResult<string>.Fail("帳號或密碼錯誤");
-            return Unauthorized(failResult);
+            return Ok(result);
+        }
+
     }
 }

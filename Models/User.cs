@@ -12,42 +12,27 @@ public class User
     [Key]
     [Column("id")]
     public int Id { get; set; }
-
-    [Column("id_number")]
-    public string IdNumber { get; set; } = string.Empty;
-
-    [Column("username")]
-    public string Username { get; set; } = string.Empty;
-
-    [Column("password")]
-    public string Password { get; set; } = string.Empty;
-
     [Column("email")]
     public string Email { get; set; } = string.Empty;
-
-    [Column("phone_number")]
-    public string PhoneNumber { get; set; } = string.Empty;
-
+    [Column("password_hash")]
+    public string PasswordHash { get; set; } = string.Empty;
+    [Column("username")]
+    public string Username { get; set; } = string.Empty;
+    [Column("id_number")]
+    public string IdNumber { get; set; } = string.Empty;
+    [Column("birthday")]
+    public string Birthday { get; set; } = string.Empty;
     [Column("mobile_number")]
     public string MobileNumber { get; set; } = string.Empty;
-
     [Column("postal_code")]
     public string PostalCode { get; set; } = string.Empty;
-
     [Column("address")]
     public string Address { get; set; } = string.Empty;
-
-    [Column("role")]
-    public string Role { get; set; } = "U";
-
     [Column("is_active")]
     public bool IsActive { get; set; } = false;
-
     //TypeName = "timestamptz" 告訴 EF：「請把這個 DateTime 欄位當成 PostgreSQL 的 timestamp with time zone」，以正確儲存和處理 UTC 時間。
     [Column("created_at", TypeName = "timestamptz")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
     [Column("updated_at", TypeName = "timestamptz")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
 }

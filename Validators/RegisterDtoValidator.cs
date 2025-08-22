@@ -7,9 +7,9 @@ using TicketSystemApi.Services;
 
 namespace TicketSystemApi.validators;
 
-public class UserCreateDtoValidator : AbstractValidator<UserCreateDto>
+public class RegisterDtoValidator : AbstractValidator<RegisterDto>
 {
-    public UserCreateDtoValidator()
+    public RegisterDtoValidator()
     {
         RuleFor(u => u.Email)
             .NotEmpty().WithMessage("電子信箱不可空白")
@@ -21,12 +21,12 @@ public class UserCreateDtoValidator : AbstractValidator<UserCreateDto>
             .Matches(@"[a-z]").WithMessage("密碼需包含至少一個小寫英文")
             .Matches(@"\d").WithMessage("密碼需包含至少一個數字")
             .Matches(@"[!@#$%^&*(),.?:{}|<>_\-+=\\/\[\]""';`~]").WithMessage("密碼需包含至少一個符號");
-        RuleFor(u => u.Username)
+       RuleFor(u => u.Username)
             .NotEmpty().WithMessage("姓名不可空白")
             .MaximumLength(20).WithMessage("姓名長度不可超過 20 個字元");
         RuleFor(u => u.IdNumber)
-             .NotEmpty().WithMessage("身分證號碼不可空白")
-             .Must(IsValidTaiwanId).WithMessage("身分證格式錯誤");
+            .NotEmpty().WithMessage("身分證號碼不可空白")
+            .Must(IsValidTaiwanId).WithMessage("身分證格式不正確");   
         RuleFor(u => u.MobileNumber)
             .NotEmpty().WithMessage("手機號碼不可空白")
             .Matches(@"^09\d{8}$").WithMessage("手機號碼格式不正確");

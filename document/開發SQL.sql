@@ -12,10 +12,9 @@ SELECT usename FROM pg_user;
 */
 
 
-
 SELECT * FROM postal;
 
-SELECT * FROM postal WHERE district LIKE '臺%';
+SELECT * FROM postal WHERE district='南港區';
 
 SELECT * FROM customers;
 
@@ -24,6 +23,17 @@ SELECT * FROM orders;
 SELECT * FROM events;
 
 SELECT * FROM users;
+
+DELETE FROM users WHERE id=5;
+
+UPDATE users SET id_number='H138406654' WHERE id=4;
+
+TRUNCATE TABLE users RESTART IDENTITY;
+
+SELECT * FROM groups;
+
+DROP TABLE user_groups;
+
 
 /* 
 用 INSERT INTO users (id, ...) VALUES (1, ...) 插了幾筆測試資料
@@ -36,12 +46,13 @@ SELECT setval('users_id_seq', (SELECT MAX(id) FROM users) + 1);
 SELECT last_value FROM users_id_seq;
 
 -- 新增欄位並設定DEFAULT
-ALTER TABLE users
-ADD COLUMN address VARCHAR(255) NOT NULL DEFAULT '';
+ALTER TABLE users ADD COLUMN address VARCHAR(255) NOT NULL DEFAULT '';
 
 -- 刪除欄位DEFAULT，因為程式裡會給預設值空白，就不在資料庫也給預設值避免混淆
-ALTER TABLE users
-ALTER COLUMN postal_code DROP DEFAULT;
+ALTER TABLE users ALTER COLUMN postal_code DROP DEFAULT;
+
+-- 修改欄位名稱
+ALTER TABLE users RENAME COLUMN password_hash TO password;
 
 -- 查表建立的索引
 SELECT * FROM pg_indexes WHERE tablename='postal';

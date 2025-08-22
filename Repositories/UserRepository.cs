@@ -39,4 +39,9 @@ public class UserRepository(AppDbContext context) : IUserRepository
     {
         return await _context.Users.AnyAsync(u => u.Email == email);
     }
+
+    public async Task<bool> IdnumberExists(string idnumber)
+    {
+        return await _context.Users.AnyAsync(u => u.IdNumber == idnumber);
+    }
 }

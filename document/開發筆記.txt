@@ -66,6 +66,10 @@ ASP.NET Core 處理請求時：
 把它轉成你自己的格式 ServiceResult.Fail(...) 並統一輸出
 這就是為什麼你不需要寫 if (!ModelState.IsValid)，但還是能得到統一格式的錯誤訊息
 
+****** 安裝 NuGet 套件 BCrypt.Net-Next
+
+dotnet add package BCrypt.Net-Next
+
 
 
 退票流程
