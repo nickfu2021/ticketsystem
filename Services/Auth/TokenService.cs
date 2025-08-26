@@ -9,14 +9,9 @@ using System.IdentityModel.Tokens.Jwt;
 namespace TicketSystemApi.Services.Auth;
 
 
-public class TokenService : ITokenService
+public class TokenService(IOptions<JwtSettings> jwt) : ITokenService
 {
-    private readonly JwtSettings _jwt;
-
-    public TokenService(Microsoft.Extensions.Options.IOptions<JwtSettings> jwt)
-    {
-        _jwt = jwt.Value;
-    }
+    private readonly JwtSettings _jwt = jwt.Value;
 
     public string CreateToken(string userId, string? email, IEnumerable<string>? roles = null)
     {

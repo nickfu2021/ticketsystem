@@ -23,12 +23,11 @@ public class AuthService(IAuthRepository authRepository,IPostalRepository postal
             return null;
         }
 
-        var token = _tokenService.CreateToken(user.Id.ToString(), user.Email, new[] { user.Role });
+        var token = _tokenService.CreateToken(user.Id.ToString(), user.Email);
         return new LoginResultDto
         {
             Token = token,
-            UserName = user.Username,
-            Role = user.Role
+            UserName = user.Username
         };
     }
     public async Task<ServiceResult<UserDto>> RegisterAsync(RegisterDto dto)
