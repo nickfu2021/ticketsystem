@@ -23,9 +23,9 @@ public class UserService(IUserRepository userRepository, IPostalRepository posta
         return ServiceResult<IEnumerable<UserDto>>.Ok(respDto);
     }
 
-    public async Task<ServiceResult<UserDto>> GetByIdAsync(int id)
+    public async Task<ServiceResult<UserDto>> GetByIdAsync(Guid guid)
     {
-        var user = await _userRepository.GetByIdAsync(id);
+        var user = await _userRepository.GetByIdAsync(guid);
         if (user == null)
         {
             return ServiceResult<UserDto>.Fail("找不到使用者");
@@ -73,14 +73,14 @@ public class UserService(IUserRepository userRepository, IPostalRepository posta
         return ServiceResult<UserDto>.Ok(respDto);
     }
 
-    public async Task<ServiceResult> UpdateAsync(int id, UserUpdateDto dto)
+    public async Task<ServiceResult> UpdateAsync(Guid guid, UserUpdateDto dto)
     {
-        if (id != dto.Id)
+        if (guid != dto.UserUuid)
         {
             return ServiceResult.Fail("提供的 ID 與 DTO 中的 ID 不符");
         }
 
-        var existingUser = await _userRepository.GetByIdAsync(id);
+        var existingUser = await _userRepository.GetByIdAsync(guid);
         if (existingUser == null)
         {
             return ServiceResult.Fail("使用者不存在");
@@ -101,9 +101,9 @@ public class UserService(IUserRepository userRepository, IPostalRepository posta
         return ServiceResult.Ok();
     }
 
-    public async Task<ServiceResult> DeleteAsync(int id)
+    public async Task<ServiceResult> DeleteAsync(Guid guid)
     {
-        var user = await _userRepository.GetByIdAsync(id);
+        var user = await _userRepository.GetByIdAsync(guid);
         if (user == null)
         {
             return ServiceResult.Fail("此客戶不存在");

@@ -10,8 +10,8 @@ public class User
     // 如果不用 EF Migration，就不用在 Entity 上寫 [StringLength]、[Required] 等 DataAnnotation，只保留資料庫映射需要的欄位資訊即可，反之則要。
 
     [Key]
-    [Column("id")]
-    public int Id { get; set; }
+    [Column("user_uuid")]
+    public Guid UserUuid { get; set; } = Guid.NewGuid();
     [Column("email")]
     public string Email { get; set; } = string.Empty;
     [Column("password_hash")]

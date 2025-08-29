@@ -30,10 +30,14 @@ UPDATE users SET id_number='H138406654' WHERE id=4;
 
 TRUNCATE TABLE users RESTART IDENTITY;
 
+SELECT * FROM users;
 SELECT * FROM groups;
+SELECT * FROM programs;
 
-DROP TABLE user_groups;
+SELECT * FROM user_groups;
+SELECT * FROM group_programs;
 
+DROP TABLE users;
 
 /* 
 用 INSERT INTO users (id, ...) VALUES (1, ...) 插了幾筆測試資料
@@ -60,4 +64,7 @@ SELECT * FROM pg_indexes WHERE tablename='postal';
 -- 建立索引
 CREATE INDEX idx_postal_zip_code ON postal(zip_code);
 CREATE INDEX idx_postal_city_district_road ON postal(city, district, road);
+
+-- PostgreSQL 內建 uuid 型態，但要能自動產生，需要啟用 pgcrypto extension：
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 

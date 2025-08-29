@@ -22,9 +22,9 @@ public class UsersController(IUserService service) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<UserDto>> GetById(int id)
+    public async Task<ActionResult<UserDto>> GetById(Guid guid)
     {
-        var result = await _service.GetByIdAsync(id);
+        var result = await _service.GetByIdAsync(guid);
         if (!result.Success)
         {
             return NotFound(result);
@@ -44,14 +44,14 @@ public class UsersController(IUserService service) : ControllerBase
 
         var newUser = result.Data;
 
-        return CreatedAtAction(nameof(GetById), new { id = newUser.Id }, newUser);
+        return CreatedAtAction(nameof(GetById), new { id = newUser.UserUuid }, newUser);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> Update(int id, [FromBody]UserUpdateDto dto)
+    public async Task<ActionResult> Update(Guid guid, [FromBody]UserUpdateDto dto)
     {
 
-        var result = await _service.UpdateAsync(id, dto);
+        var result = await _service.UpdateAsync(guid, dto);
         if (!result.Success)
         {
             return NotFound(result);
@@ -61,9 +61,9 @@ public class UsersController(IUserService service) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> Delete(int id)
+    public async Task<ActionResult> Delete(Guid guid)
     {
-        var result = await _service.DeleteAsync(id);
+        var result = await _service.DeleteAsync(guid);
         if (!result.Success)
         {
             return NotFound(result);

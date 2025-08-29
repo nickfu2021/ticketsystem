@@ -6,9 +6,9 @@ namespace TicketSystemApi.Services;
 public interface IUserService
 {
     Task<ServiceResult<IEnumerable<UserDto>>> GetAllAsync();
-    Task<ServiceResult<UserDto>> GetByIdAsync(int id);
+    Task<ServiceResult<UserDto>> GetByIdAsync(Guid guid);
     Task<ServiceResult<UserDto>> CreateAsync(UserCreateDto user);
-    Task<ServiceResult> UpdateAsync(int id, UserUpdateDto user);
-    Task<ServiceResult> DeleteAsync(int id);
+    Task<ServiceResult> UpdateAsync(Guid guid, UserUpdateDto user);
+    Task<ServiceResult> DeleteAsync(Guid guid);
 
 }

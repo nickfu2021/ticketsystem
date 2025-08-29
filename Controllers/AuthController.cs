@@ -13,9 +13,19 @@ namespace TicketSystemApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var result = await _service.LoginAsync(dto.Email, dto.Password);
-            if (result == null)
-                return Unauthorized("帳號或密碼錯誤");
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var ua = Request.Headers.UserAgent.ToString();
+
+            var result = await _service.LoginAsync(dto.Email, dto.Password, ip, ua);
+            if (result == null) return Unauthorized("帳號或密碼錯誤");
+
+            Response.Cookies.Append("rt", result.RefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddDays(14)
+            });
 
             return Ok(result);
         }
@@ -35,5 +45,43 @@ namespace TicketSystemApi.Controllers
             return Ok(result);
         }
 
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh()
+        {
+            // 若 RT 放在 Cookie
+            var rt = Request.Cookies["rt"];
+            if (string.IsNullOrWhiteSpace(rt)) return Unauthorized();
+
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var ua = Request.Headers.UserAgent.ToString();
+
+            var res = await _service.RefreshAsync(rt, ip, ua);
+            if (!res.Ok) return Unauthorized(new { error = res.Error });
+
+            // 更新 Cookie
+            Response.Cookies.Append("rt", res.NewRefreshToken!, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddDays(14)
+            });
+
+            return Ok(new { access_token = res.AccessToken });
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var rt = Request.Cookies["rt"];
+            if (string.IsNullOrWhiteSpace(rt)) return Ok();
+
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            await _service.LogoutAsync(rt, ip);
+
+            Response.Cookies.Delete("rt");
+            return Ok();
+        }
     }
 }

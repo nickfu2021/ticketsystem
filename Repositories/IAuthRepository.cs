@@ -5,7 +5,14 @@ namespace TicketSystemApi.Repositories;
 public interface IAuthRepository
 {
     Task<User?> GetUserByEmailAsync(string email);
+    Task<User?> GetUserByUuidAsync(Guid userUuid);
     Task CreateUserAsync(User user);
     Task<bool> EmailExistsAsync(string email);
     Task<bool> IdNumberExistsAsync(string idNumber);
+
+    // Refresh Token 相關
+    Task AddRefreshTokenAsync(RefreshToken token);
+    Task<RefreshToken?> GetActiveRefreshTokenByHashAsync(string tokenHash);
+    Task SaveChangesAsync();
+    Task RevokeRefreshTokenAsync(RefreshToken token, string reason, string? replacedByHash = null);
 }
