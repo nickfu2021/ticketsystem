@@ -17,6 +17,20 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -130,9 +144,9 @@ ALTER SEQUENCE public.events_id_seq OWNED BY public.events.id;
 --
 
 CREATE TABLE public.group_programs (
-    id integer NOT NULL,
-    group_id integer NOT NULL,
-    program_id integer NOT NULL,
+    gp_uuid uuid NOT NULL,
+    group_code character(4) NOT NULL,
+    program_code character varying(50) NOT NULL,
     can_view boolean NOT NULL,
     can_create boolean NOT NULL,
     can_update boolean NOT NULL,
@@ -149,34 +163,12 @@ CREATE TABLE public.group_programs (
 ALTER TABLE public.group_programs OWNER TO postgres;
 
 --
--- Name: group_programs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.group_programs_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.group_programs_id_seq OWNER TO postgres;
-
---
--- Name: group_programs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.group_programs_id_seq OWNED BY public.group_programs.id;
-
-
---
 -- Name: groups; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.groups (
-    id integer NOT NULL,
-    name character varying(50) NOT NULL,
+    group_uuid uuid NOT NULL,
+    code character(4) NOT NULL,
     description text NOT NULL,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL
@@ -184,28 +176,6 @@ CREATE TABLE public.groups (
 
 
 ALTER TABLE public.groups OWNER TO postgres;
-
---
--- Name: groups_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.groups_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.groups_id_seq OWNER TO postgres;
-
---
--- Name: groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.groups_id_seq OWNED BY public.groups.id;
-
 
 --
 -- Name: orders_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -284,7 +254,7 @@ ALTER SEQUENCE public.postal_id_seq OWNED BY public.postal.id;
 --
 
 CREATE TABLE public.programs (
-    id integer NOT NULL,
+    pg_uuid uuid NOT NULL,
     code character varying(50) NOT NULL,
     name character varying(100) NOT NULL,
     path character varying(200) NOT NULL,
@@ -297,35 +267,35 @@ CREATE TABLE public.programs (
 ALTER TABLE public.programs OWNER TO postgres;
 
 --
--- Name: programs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: refresh_tokens; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public.programs_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE TABLE public.refresh_tokens (
+    rt_uuid uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_uuid uuid NOT NULL,
+    token_hash text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_by_ip text,
+    user_agent text,
+    expires_at timestamp with time zone NOT NULL,
+    revoked_at timestamp with time zone,
+    replaced_by text,
+    revoked_reason text,
+    last_used_at timestamp with time zone,
+    last_used_ip text
+);
 
 
-ALTER SEQUENCE public.programs_id_seq OWNER TO postgres;
-
---
--- Name: programs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.programs_id_seq OWNED BY public.programs.id;
-
+ALTER TABLE public.refresh_tokens OWNER TO postgres;
 
 --
 -- Name: user_groups; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.user_groups (
-    id integer NOT NULL,
-    user_id integer NOT NULL,
-    group_id integer NOT NULL,
+    ug_uuid uuid NOT NULL,
+    user_uuid uuid NOT NULL,
+    group_code character(4) NOT NULL,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL
 );
@@ -334,33 +304,11 @@ CREATE TABLE public.user_groups (
 ALTER TABLE public.user_groups OWNER TO postgres;
 
 --
--- Name: user_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.user_groups_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.user_groups_id_seq OWNER TO postgres;
-
---
--- Name: user_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.user_groups_id_seq OWNED BY public.user_groups.id;
-
-
---
 -- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.users (
-    id integer NOT NULL,
+    user_uuid uuid NOT NULL,
     email character varying(255) NOT NULL,
     password_hash character varying(255) NOT NULL,
     username character varying(100) NOT NULL,
@@ -378,28 +326,6 @@ CREATE TABLE public.users (
 ALTER TABLE public.users OWNER TO postgres;
 
 --
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.users_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
-
---
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
-
-
---
 -- Name: customers id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -414,20 +340,6 @@ ALTER TABLE ONLY public.events ALTER COLUMN id SET DEFAULT nextval('public.event
 
 
 --
--- Name: group_programs id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.group_programs ALTER COLUMN id SET DEFAULT nextval('public.group_programs_id_seq'::regclass);
-
-
---
--- Name: groups id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.groups ALTER COLUMN id SET DEFAULT nextval('public.groups_id_seq'::regclass);
-
-
---
 -- Name: orders id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -439,27 +351,6 @@ ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.order
 --
 
 ALTER TABLE ONLY public.postal ALTER COLUMN id SET DEFAULT nextval('public.postal_id_seq'::regclass);
-
-
---
--- Name: programs id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.programs ALTER COLUMN id SET DEFAULT nextval('public.programs_id_seq'::regclass);
-
-
---
--- Name: user_groups id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.user_groups ALTER COLUMN id SET DEFAULT nextval('public.user_groups_id_seq'::regclass);
-
-
---
--- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
@@ -495,7 +386,7 @@ COPY public.events (id, name, location, event_date, total_tickets, price) FROM s
 -- Data for Name: group_programs; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.group_programs (id, group_id, program_id, can_view, can_create, can_update, can_delete, can_export, group_programs_1, group_programs_2, group_programs_3, created_at, updated_at) FROM stdin;
+COPY public.group_programs (gp_uuid, group_code, program_code, can_view, can_create, can_update, can_delete, can_export, group_programs_1, group_programs_2, group_programs_3, created_at, updated_at) FROM stdin;
 \.
 
 
@@ -503,7 +394,7 @@ COPY public.group_programs (id, group_id, program_id, can_view, can_create, can_
 -- Data for Name: groups; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.groups (id, name, description, created_at, updated_at) FROM stdin;
+COPY public.groups (group_uuid, code, description, created_at, updated_at) FROM stdin;
 \.
 
 
@@ -34327,7 +34218,16 @@ COPY public.postal (id, zip_code, city, district, road) FROM stdin;
 -- Data for Name: programs; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.programs (id, code, name, path, description, created_at, updated_at) FROM stdin;
+COPY public.programs (pg_uuid, code, name, path, description, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: refresh_tokens; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.refresh_tokens (rt_uuid, user_uuid, token_hash, created_at, created_by_ip, user_agent, expires_at, revoked_at, replaced_by, revoked_reason, last_used_at, last_used_ip) FROM stdin;
+0198f51a-52db-78be-865f-0011110057c9	a7685947-a7bf-4c00-abaf-e81b180ec7f4	1fde9e0fe6517e682193724961fa1159d4cc4b7c995112cc426aa737e0d3d405	2025-08-29 17:13:19.810649+08	::1	PostmanRuntime/7.45.0	2025-09-12 17:13:19.810785+08	\N	\N	\N	\N	\N
 \.
 
 
@@ -34335,7 +34235,7 @@ COPY public.programs (id, code, name, path, description, created_at, updated_at)
 -- Data for Name: user_groups; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.user_groups (id, user_id, group_id, created_at, updated_at) FROM stdin;
+COPY public.user_groups (ug_uuid, user_uuid, group_code, created_at, updated_at) FROM stdin;
 \.
 
 
@@ -34343,7 +34243,8 @@ COPY public.user_groups (id, user_id, group_id, created_at, updated_at) FROM std
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.users (id, email, password_hash, username, id_number, birthday, mobile_number, postal_code, address, is_active, created_at, updated_at) FROM stdin;
+COPY public.users (user_uuid, email, password_hash, username, id_number, birthday, mobile_number, postal_code, address, is_active, created_at, updated_at) FROM stdin;
+a7685947-a7bf-4c00-abaf-e81b180ec7f4	suis@example.com	$2a$11$egO4lZTTcSyQoDKnRIK16euFiDCFXCrdQb9lCJKhhia8NYI3hKG2i	Suis	D209037607	19950121	0913323256	333	桃園市龜山區忠義路60號1樓	f	2025-08-29 11:42:16.96172+08	2025-08-29 11:42:16.961823+08
 \.
 
 
@@ -34362,20 +34263,6 @@ SELECT pg_catalog.setval('public.events_id_seq', 15, true);
 
 
 --
--- Name: group_programs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.group_programs_id_seq', 1, false);
-
-
---
--- Name: groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.groups_id_seq', 1, false);
-
-
---
 -- Name: orders_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -34387,27 +34274,6 @@ SELECT pg_catalog.setval('public.orders_id_seq', 18, true);
 --
 
 SELECT pg_catalog.setval('public.postal_id_seq', 33793, true);
-
-
---
--- Name: programs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.programs_id_seq', 1, false);
-
-
---
--- Name: user_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.user_groups_id_seq', 1, false);
-
-
---
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.users_id_seq', 1, false);
 
 
 --
@@ -34439,15 +34305,7 @@ ALTER TABLE ONLY public.events
 --
 
 ALTER TABLE ONLY public.group_programs
-    ADD CONSTRAINT group_programs_pkey PRIMARY KEY (id);
-
-
---
--- Name: groups groups_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.groups
-    ADD CONSTRAINT groups_name_key UNIQUE (name);
+    ADD CONSTRAINT group_programs_pkey PRIMARY KEY (gp_uuid);
 
 
 --
@@ -34455,7 +34313,7 @@ ALTER TABLE ONLY public.groups
 --
 
 ALTER TABLE ONLY public.groups
-    ADD CONSTRAINT groups_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT groups_pkey PRIMARY KEY (group_uuid);
 
 
 --
@@ -34475,19 +34333,27 @@ ALTER TABLE ONLY public.postal
 
 
 --
--- Name: programs programs_code_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.programs
-    ADD CONSTRAINT programs_code_key UNIQUE (code);
-
-
---
 -- Name: programs programs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.programs
-    ADD CONSTRAINT programs_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT programs_pkey PRIMARY KEY (pg_uuid);
+
+
+--
+-- Name: refresh_tokens refresh_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.refresh_tokens
+    ADD CONSTRAINT refresh_tokens_pkey PRIMARY KEY (rt_uuid);
+
+
+--
+-- Name: refresh_tokens uq_refresh_token; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.refresh_tokens
+    ADD CONSTRAINT uq_refresh_token UNIQUE (token_hash);
 
 
 --
@@ -34495,7 +34361,15 @@ ALTER TABLE ONLY public.programs
 --
 
 ALTER TABLE ONLY public.user_groups
-    ADD CONSTRAINT user_groups_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT user_groups_pkey PRIMARY KEY (ug_uuid);
+
+
+--
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
 
 
 --
@@ -34503,7 +34377,7 @@ ALTER TABLE ONLY public.user_groups
 --
 
 ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT users_pkey PRIMARY KEY (user_uuid);
 
 
 --
@@ -34518,6 +34392,27 @@ CREATE INDEX idx_postal_city_district_road ON public.postal USING btree (city, d
 --
 
 CREATE INDEX idx_postal_zip_code ON public.postal USING btree (zip_code);
+
+
+--
+-- Name: idx_refresh_tokens_expires; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_refresh_tokens_expires ON public.refresh_tokens USING btree (expires_at);
+
+
+--
+-- Name: idx_refresh_tokens_revoked; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_refresh_tokens_revoked ON public.refresh_tokens USING btree (revoked_at);
+
+
+--
+-- Name: idx_refresh_tokens_user_uuid; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_refresh_tokens_user_uuid ON public.refresh_tokens USING btree (user_uuid);
 
 
 --
