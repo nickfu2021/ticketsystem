@@ -166,3 +166,16 @@ ElephantSQL（免費小量 DB）
 **** 2025/7/30 ****
 
 我現在遇到一個問題，我提供了修改 customers 的 put api，但當我改了 name 訂單 orders 表格儲存的 customername 還是舊的
+
+**** 剪貼簿 ****
+
+全國路名資料
+https://data.gov.tw/dataset/35321
+
+臺灣地區郵遞區號前3碼一覽表 103/12(Excel版)
+https://www.post.gov.tw/post/internet/Download/all_list.jsp?ID=2201#dl_link_2735
+
+{
+  "email": "suis@example.com",
+  "password": "Suis3ui3@"
+}

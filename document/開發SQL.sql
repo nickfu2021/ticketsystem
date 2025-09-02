@@ -68,3 +68,38 @@ CREATE INDEX idx_postal_city_district_road ON postal(city, district, road);
 -- PostgreSQL 內建 uuid 型態，但要能自動產生，需要啟用 pgcrypto extension：
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+CREATE EXTENSION IF NOT EXISTS "pgcrypto"; -- 提供 gen_random_uuid()
+
+SELECT * FROM refresh_tokens;
+
+-- refresh_tokens 建表 SQL
+CREATE TABLE public.refresh_tokens (
+    rt_uuid         uuid PRIMARY KEY DEFAULT gen_random_uuid(),  -- Token PK
+    user_uuid       uuid NOT NULL,                               -- 關聯使用者
+    token_hash      text NOT NULL,                               -- Refresh Token 雜湊（不存明文）
+    created_at      timestamptz NOT NULL DEFAULT now(),          -- 建立時間
+    created_by_ip   text,                                        -- 建立時來源 IP
+    user_agent      text,                                        -- 建立時 User-Agent
+
+    expires_at      timestamptz NOT NULL,                        -- 到期時間
+    revoked_at      timestamptz,                                 -- 撤銷時間（登出/輪轉/風控）
+    replaced_by     text,                                        -- 被哪個新 RT 取代（存新 RT 的 hash）
+    revoked_reason  text,                                        -- 撤銷原因（可選）
+
+    last_used_at    timestamptz,                                 -- 最後使用時間
+    last_used_ip    text,                                        -- 最後使用來源 IP
+
+    CONSTRAINT uq_refresh_token UNIQUE (token_hash)              -- 保證 hash 唯一
+);
+
+-- 索引建議（方便查詢）
+CREATE INDEX idx_refresh_tokens_user_uuid ON public.refresh_tokens(user_uuid);
+CREATE INDEX idx_refresh_tokens_expires   ON public.refresh_tokens(expires_at);
+CREATE INDEX idx_refresh_tokens_revoked   ON public.refresh_tokens(revoked_at);
+
+
+ALTER TABLE refresh_tokens
+ALTER COLUMN created_by_ip TYPE text USING created_by_ip::text;
+
+ALTER TABLE refresh_tokens
+ALTER COLUMN last_used_ip TYPE text USING last_used_ip::text;

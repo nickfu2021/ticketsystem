@@ -1,4 +1,3 @@
-
 using AutoMapper;
 using Microsoft.Extensions.Options;
 using TicketSystemApi.Common;
@@ -17,17 +16,18 @@ public class AuthService(IAuthRepository authRepository, IPostalRepository posta
     private readonly IMapper _mapper = mapper;
     private readonly JwtSettings _jwt = jwtOptions.Value;
 
-    public async Task<LoginResultDto?> LoginAsync(string email, string password, string? ip, string? userAgent)
+    public async Task<(ServiceResult<LoginResultDto> Result, string? RefreshToken)> LoginAsync(string email, string password, string ip, string userAgent)
     {
         var user = await _authRepository.GetUserByEmailAsync(email);
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-            return null;
+            return (ServiceResult<LoginResultDto>.Fail("帳號或密碼錯誤"), null);
 
-        // 1) Access Token（短效）
+        // 1) Access Token（短效）: 與 respone json data 回傳
         var accessToken = _tokenService.CreateToken(user.UserUuid.ToString(), user.Email);
 
-        // 2) Refresh Token（長效，不是JWT）
+        // 2) Refresh Token（長效，不是JWT）: 只回傳到前端 cookie
         var rtPlain = RefreshTokenUtil.GeneratePlainToken();
+        // 開發階段會讀 /Properties/launchSettings.json 注入
         var rtHash = RefreshTokenUtil.Hash(rtPlain, _jwt.RefreshTokenPepper);
 
         var rt = new RefreshToken
@@ -42,13 +42,14 @@ public class AuthService(IAuthRepository authRepository, IPostalRepository posta
         await _authRepository.AddRefreshTokenAsync(rt);
         await _authRepository.SaveChangesAsync();
 
-        return new LoginResultDto
+        var dto = new LoginResultDto
         {
             AccessToken = accessToken,
             ExpiresIn = _jwt.ExpiresMinutes * 60,
-            RefreshToken = rtPlain,
             UserName = user.Username
         };
+
+        return (ServiceResult<LoginResultDto>.Ok(dto), rtPlain);
 
     }
     public async Task<ServiceResult<UserDto>> RegisterAsync(RegisterDto dto)
@@ -57,14 +58,11 @@ public class AuthService(IAuthRepository authRepository, IPostalRepository posta
         if (!postalValid)
             return ServiceResult<UserDto>.Fail("郵遞區號與縣市/鄉鎮區不符");
 
-
         if (await _authRepository.IdNumberExistsAsync(dto.IdNumber))
             return ServiceResult<UserDto>.Fail("此身分證號已註冊");
 
-
         if (await _authRepository.EmailExistsAsync(dto.Email))
             return ServiceResult<UserDto>.Fail("此信箱已被註冊");
-
 
         var newUser = _mapper.Map<User>(dto);
         newUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);

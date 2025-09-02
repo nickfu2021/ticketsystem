@@ -13,19 +13,24 @@ namespace TicketSystemApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             var ua = Request.Headers.UserAgent.ToString();
 
-            var result = await _service.LoginAsync(dto.Email, dto.Password, ip, ua);
-            if (result == null) return Unauthorized("帳號或密碼錯誤");
+            var (result, rt) = await _service.LoginAsync(dto.Email, dto.Password, ip, ua);
 
-            Response.Cookies.Append("rt", result.RefreshToken, new CookieOptions
+            if (!result.Success)
+                return Unauthorized(result);
+
+            if (!string.IsNullOrWhiteSpace(rt))
             {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTimeOffset.UtcNow.AddDays(14)
-            });
+                Response.Cookies.Append("rt", rt, new CookieOptions
+                {
+                    HttpOnly = true,    //禁止 JavaScript 存取（避免 XSS）
+                    Secure = true,  //只在 HTTPS 傳輸
+                    SameSite = SameSiteMode.Strict, //限定同網域才送出，防止 CSRF
+                    Expires = DateTimeOffset.UtcNow.AddDays(14)
+                });
+            }
 
             return Ok(result);
         }

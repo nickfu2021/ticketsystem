@@ -78,12 +78,12 @@ public class OrderService(IOrderRepository orderRepository, IEventRepository eve
         return ServiceResult<OrderDto>.Ok(respDto);
     }
 
-    public async Task<ServiceResult> UpdateAsync(int id, OrderUpdateDto dto)
+    public async Task<ServiceResult<Unit>> UpdateAsync(int id, OrderUpdateDto dto)
     {
         // check 1: 檢查路由ID與資料ID是否一致
         if (id != dto.Id)
         {
-            return ServiceResult.Fail("路由ID與資料ID不一致");
+            return ServiceResult<Unit>.Fail("路由ID與資料ID不一致");
         }
 
         var order = _mapper.Map<Order>(dto);
@@ -92,14 +92,14 @@ public class OrderService(IOrderRepository orderRepository, IEventRepository eve
         var existingOrder = await _orderRepository.GetByIdAsync(order.Id);
         if (existingOrder == null)
         {
-            return ServiceResult.Fail("此訂單不存在");
+            return ServiceResult<Unit>.Fail("此訂單不存在");
         }
 
         // check 2: 確認活動存不存在
         var evt = await _eventRepository.GetByIdAsync(existingOrder.EventId);
         if (evt == null)
         {
-            return ServiceResult.Fail("所選活動不存在");
+            return ServiceResult<Unit>.Fail("所選活動不存在");
         }
 
         // check 3: 確認更新後的票數不超過剩餘票數
@@ -108,24 +108,24 @@ public class OrderService(IOrderRepository orderRepository, IEventRepository eve
 
         if (order.Quantity > remaining)
         {
-            return ServiceResult.Fail($"所選活動剩餘票數不足，僅剩 {remaining} 張");
+            return ServiceResult<Unit>.Fail($"所選活動剩餘票數不足，僅剩 {remaining} 張");
         }
 
         existingOrder.Quantity = order.Quantity;
 
         await _orderRepository.UpdateAsync(existingOrder);
-        return ServiceResult.Ok();
+        return ServiceResult<Unit>.Ok(Unit.Value);
     }
 
-    public async Task<ServiceResult> DeleteAsync(int id)
+    public async Task<ServiceResult<Unit>> DeleteAsync(int id)
     {
         var order = await _orderRepository.GetByIdAsync(id);
         if (order == null)
         {
-            return ServiceResult.Fail("此訂單不存在");
+            return ServiceResult<Unit>.Fail("此訂單不存在");
         }
 
         await _orderRepository.DeleteAsync(order);
-        return ServiceResult.Ok();
+        return ServiceResult<Unit>.Ok(Unit.Value);
     }
 }

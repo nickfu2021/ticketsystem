@@ -51,45 +51,45 @@ public class CustomerService(ICustomerRepository customerRepository, IOrderRepos
         return ServiceResult<CustomerDto>.Ok(respDto);
     }
 
-    public async Task<ServiceResult> UpdateAsync(int id, CustomerUpdateDto dto)
+    public async Task<ServiceResult<Unit>> UpdateAsync(int id, CustomerUpdateDto dto)
     {
         if (id != dto.Id)
         {
-            return ServiceResult.Fail("提供的 ID 與 DTO 中的 ID 不符");
+            return ServiceResult<Unit>.Fail("提供的 ID 與 DTO 中的 ID 不符");
         }
 
         var customer = _mapper.Map<Customer>(dto);
 
         if (!await _customerRepository.ExistsAsync(id))
         {
-            return ServiceResult.Fail("此客戶不存在");
+            return ServiceResult<Unit>.Fail("此客戶不存在");
         }
 
         if (await _customerRepository.EmailExists(customer.Email))
         {
-            return ServiceResult.Fail("此電子郵件已被註冊");
+            return ServiceResult<Unit>.Fail("此電子郵件已被註冊");
         }
 
         await _customerRepository.UpdateAsync(customer);
-        return ServiceResult.Ok();
+        return ServiceResult<Unit>.Ok(Unit.Value);
     }
 
-    public async Task<ServiceResult> DeleteAsync(int id)
+    public async Task<ServiceResult<Unit>> DeleteAsync(int id)
     {
         var customer = await _customerRepository.GetByIdAsync(id);
         if (customer == null)
         {
-            return ServiceResult.Fail("此客戶不存在");
+            return ServiceResult<Unit>.Fail("此客戶不存在");
         }
 
         var hasOrder = await _orderRepository.GetByCustomerIdAsync(id);
         if (hasOrder != null)
         {
-            return ServiceResult.Fail("此客戶仍有訂單，無法刪除");
+            return ServiceResult<Unit>.Fail("此客戶仍有訂單，無法刪除");
         }
 
         await _customerRepository.DeleteAsync(customer);
-        return ServiceResult.Ok();
+        return ServiceResult<Unit>.Ok(Unit.Value);
     }
 
 }

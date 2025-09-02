@@ -73,23 +73,23 @@ public class UserService(IUserRepository userRepository, IPostalRepository posta
         return ServiceResult<UserDto>.Ok(respDto);
     }
 
-    public async Task<ServiceResult> UpdateAsync(Guid guid, UserUpdateDto dto)
+    public async Task<ServiceResult<Unit>> UpdateAsync(Guid guid, UserUpdateDto dto)
     {
         if (guid != dto.UserUuid)
         {
-            return ServiceResult.Fail("提供的 ID 與 DTO 中的 ID 不符");
+            return ServiceResult<Unit>.Fail("提供的 ID 與 DTO 中的 ID 不符");
         }
 
         var existingUser = await _userRepository.GetByIdAsync(guid);
         if (existingUser == null)
         {
-            return ServiceResult.Fail("使用者不存在");
+            return ServiceResult<Unit>.Fail("使用者不存在");
         }
 
         bool postalValid = await _postalRepository.ExistsZipCityDistrictAsync(dto.PostalCode, dto.City, dto.District);
         if (!postalValid)
         {
-            return ServiceResult.Fail("郵遞區號與縣市/鄉鎮區不符");
+            return ServiceResult<Unit>.Fail("郵遞區號與縣市/鄉鎮區不符");
         }
 
         _mapper.Map(dto, existingUser);
@@ -98,18 +98,18 @@ public class UserService(IUserRepository userRepository, IPostalRepository posta
         existingUser.UpdatedAt = DateTime.UtcNow;
 
         await _userRepository.UpdateAsync(existingUser);
-        return ServiceResult.Ok();
+        return ServiceResult<Unit>.Ok(Unit.Value);
     }
 
-    public async Task<ServiceResult> DeleteAsync(Guid guid)
+    public async Task<ServiceResult<Unit>> DeleteAsync(Guid guid)
     {
         var user = await _userRepository.GetByIdAsync(guid);
         if (user == null)
         {
-            return ServiceResult.Fail("此客戶不存在");
+            return ServiceResult<Unit>.Fail("此客戶不存在");
         }
 
         await _userRepository.DeleteAsync(user);
-        return ServiceResult.Ok();
+        return ServiceResult<Unit>.Ok(Unit.Value);
     }
 }

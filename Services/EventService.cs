@@ -52,41 +52,41 @@ public class EventService(IEventRepository eventRepository, IOrderRepository ord
         return ServiceResult<EventDto>.Ok(respDto);
     }
 
-    public async Task<ServiceResult> UpdateAsync(int id, EventUpdateDto evt)
+    public async Task<ServiceResult<Unit>> UpdateAsync(int id, EventUpdateDto evt)
     {
         if (id != evt.Id)
         {
-            return ServiceResult.Fail("路由ID與資料ID不相同");
+            return ServiceResult<Unit>.Fail("路由ID與資料ID不相同");
         }
 
         if (!await _eventRepository.ExistsAsync(id))
         {
-            return ServiceResult.Fail("活動場次不存在，無法更新");
+            return ServiceResult<Unit>.Fail("活動場次不存在，無法更新");
         }
 
         var events = _mapper.Map<Event>(evt);
 
         await _eventRepository.UpdateAsync(events);
 
-        return ServiceResult.Ok();
+        return ServiceResult<Unit>.Ok(Unit.Value);
     }
 
-    public async Task<ServiceResult> DeleteAsync(int id)
+    public async Task<ServiceResult<Unit>> DeleteAsync(int id)
     {
         var evt = await _eventRepository.GetByIdAsync(id);
 
         if (evt == null)
         {
-            return ServiceResult.Fail("活動場次不存在，無法刪除");
+            return ServiceResult<Unit>.Fail("活動場次不存在，無法刪除");
         }
 
         if (await _orderRepository.HasOrderForEventAsync(id))
         {
-            return ServiceResult.Fail("無法刪除，因為有訂單與此活動場次相關聯");
+            return ServiceResult<Unit>.Fail("無法刪除，因為有訂單與此活動場次相關聯");
         }
 
         await _eventRepository.DeleteAsync(evt);
 
-        return ServiceResult.Ok();
+        return ServiceResult<Unit>.Ok(Unit.Value);
     }
 }

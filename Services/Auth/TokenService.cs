@@ -21,8 +21,7 @@ public class TokenService(IOptions<JwtSettings> jwt) : ITokenService
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new(ClaimTypes.NameIdentifier, userId)
             };
-        if (!string.IsNullOrWhiteSpace(email))
-            claims.Add(new Claim(ClaimTypes.Email, email));
+
         if (roles != null)
             claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
