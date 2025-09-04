@@ -20,5 +20,5 @@ public class AppDbContext(DbContextOptions<AppDbContext> option) : DbContext(opt
     // 也允許你在程式碼中測試時 mock（自己 new 一個 DbSet 代替）。
     // 這是 EF Core 文件範例裡最常見的寫法。
     public DbSet<Postal> Postal { get; set; }
-
+    public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
 }

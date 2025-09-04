@@ -30,7 +30,10 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
     {
         return await _context.Users.AnyAsync(u => u.IdNumber == idNumber);
     }
-
+    public async Task<bool> MobileExistsAsync(string mobileNumber)
+    {
+        return await _context.Users.AnyAsync(u => u.MobileNumber == mobileNumber);
+    }
     // === Refresh Token 部分 ===
 
     public async Task AddRefreshTokenAsync(RefreshToken token)

@@ -41,7 +41,10 @@ namespace TicketSystemApi.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            var result = await _service.RegisterAsync(dto);
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var ua = Request.Headers.UserAgent.ToString();
+
+            var result = await _service.RegisterAsync(dto, ip, ua);
             if (!result.Success)
             {
                 return BadRequest(result.ErrorMessage);
@@ -54,26 +57,31 @@ namespace TicketSystemApi.Controllers
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh()
         {
-            // 若 RT 放在 Cookie
-            var rt = Request.Cookies["rt"];
-            if (string.IsNullOrWhiteSpace(rt)) return Unauthorized();
-
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
             var ua = Request.Headers.UserAgent.ToString();
 
-            var res = await _service.RefreshAsync(rt, ip, ua);
-            if (!res.Ok) return Unauthorized(new { error = res.Error });
+            // 若 RT 放在 Cookie
+            var rtPlain = Request.Cookies["rt"];
+            if (string.IsNullOrWhiteSpace(rtPlain))
+                return Unauthorized(new { ok = false, error = "missing_refresh_token" });
 
-            // 更新 Cookie
-            Response.Cookies.Append("rt", res.NewRefreshToken!, new CookieOptions
+            var (result, newRtPlain) = await _service.RefreshAsync(rtPlain, ip, ua);
+
+            if (!result.Ok)
+                return Unauthorized(result);
+
+            if (!string.IsNullOrWhiteSpace(newRtPlain))
             {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTimeOffset.UtcNow.AddDays(14)
-            });
+                Response.Cookies.Append("rt", newRtPlain, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.UtcNow.AddDays(14)
+                });
+            }
 
-            return Ok(new { access_token = res.AccessToken });
+            return Ok(result);
         }
 
         [HttpPost("logout")]

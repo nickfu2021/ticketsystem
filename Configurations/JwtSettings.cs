@@ -1,4 +1,4 @@
-namespace TicketSystemApi.Common;
+namespace TicketSystemApi.Configurations;
 
 public class JwtSettings
 {

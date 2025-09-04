@@ -13,7 +13,7 @@ public class TokenService(IOptions<JwtSettings> jwt) : ITokenService
 {
     private readonly JwtSettings _jwt = jwt.Value;
 
-    public string CreateToken(string userId, string? email, IEnumerable<string>? roles = null)
+    public string CreateToken(string userId, IEnumerable<string>? roles = null)
     {
         var claims = new List<Claim>
             {

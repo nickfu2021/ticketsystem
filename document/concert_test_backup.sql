@@ -18,6 +18,20 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: citext; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION citext; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION citext IS 'data type for case-insensitive character strings';
+
+
+--
 -- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -116,6 +130,24 @@ CREATE VIEW public.customers_order AS
 
 
 ALTER VIEW public.customers_order OWNER TO postgres;
+
+--
+-- Name: email_verification_tokens; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.email_verification_tokens (
+    token_id uuid NOT NULL,
+    user_uuid uuid NOT NULL,
+    token_hash character varying(255) NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    created_ip character varying(64),
+    created_ua character varying(255),
+    consumed_at timestamp with time zone
+);
+
+
+ALTER TABLE public.email_verification_tokens OWNER TO postgres;
 
 --
 -- Name: events_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -282,7 +314,8 @@ CREATE TABLE public.refresh_tokens (
     replaced_by text,
     revoked_reason text,
     last_used_at timestamp with time zone,
-    last_used_ip text
+    last_used_ip text,
+    is_active boolean DEFAULT true NOT NULL
 );
 
 
@@ -311,15 +344,18 @@ CREATE TABLE public.users (
     user_uuid uuid NOT NULL,
     email character varying(255) NOT NULL,
     password_hash character varying(255) NOT NULL,
-    username character varying(100) NOT NULL,
-    id_number character varying(10) NOT NULL,
-    birthday character varying(8) NOT NULL,
+    username character varying(100),
+    id_number character varying(10),
+    birthday character varying(8),
     mobile_number character varying(20) NOT NULL,
-    postal_code character varying(3) NOT NULL,
-    address character varying(255) NOT NULL,
+    postal_code character varying(3),
+    address character varying(255),
     is_active boolean NOT NULL,
+    is_locked boolean NOT NULL,
     created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
+    updated_at timestamp with time zone NOT NULL,
+    last_login_at timestamp with time zone,
+    email_verified_at timestamp with time zone
 );
 
 
@@ -364,6 +400,14 @@ COPY public.customers (id, name, email) FROM stdin;
 11	suis	suis@example.com
 1	n-buna	n-buna@example.com
 2	Ryo	Ryo@example.com
+\.
+
+
+--
+-- Data for Name: email_verification_tokens; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.email_verification_tokens (token_id, user_uuid, token_hash, expires_at, created_at, created_ip, created_ua, consumed_at) FROM stdin;
 \.
 
 
@@ -34226,8 +34270,12 @@ COPY public.programs (pg_uuid, code, name, path, description, created_at, update
 -- Data for Name: refresh_tokens; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.refresh_tokens (rt_uuid, user_uuid, token_hash, created_at, created_by_ip, user_agent, expires_at, revoked_at, replaced_by, revoked_reason, last_used_at, last_used_ip) FROM stdin;
-0198f51a-52db-78be-865f-0011110057c9	a7685947-a7bf-4c00-abaf-e81b180ec7f4	1fde9e0fe6517e682193724961fa1159d4cc4b7c995112cc426aa737e0d3d405	2025-08-29 17:13:19.810649+08	::1	PostmanRuntime/7.45.0	2025-09-12 17:13:19.810785+08	\N	\N	\N	\N	\N
+COPY public.refresh_tokens (rt_uuid, user_uuid, token_hash, created_at, created_by_ip, user_agent, expires_at, revoked_at, replaced_by, revoked_reason, last_used_at, last_used_ip, is_active) FROM stdin;
+0198f51a-52db-78be-865f-0011110057c9	a7685947-a7bf-4c00-abaf-e81b180ec7f4	1fde9e0fe6517e682193724961fa1159d4cc4b7c995112cc426aa737e0d3d405	2025-08-29 17:13:19.810649+08	::1	PostmanRuntime/7.45.0	2025-09-12 17:13:19.810785+08	\N	\N	\N	\N	\N	t
+01990940-866d-7e07-a8bf-fa55041bfc5f	a7685947-a7bf-4c00-abaf-e81b180ec7f4	abc5627c3882c13c51cb7c2210067661b6285e04296cc4d175c293dd8e9428b1	2025-09-02 15:07:27.649249+08	::1	PostmanRuntime/7.45.0	2025-09-16 15:07:27.649386+08	\N	\N	\N	\N	\N	t
+019909a0-f1aa-7c37-a78e-018b907aac34	a7685947-a7bf-4c00-abaf-e81b180ec7f4	c52bd4b78e9bb6671e0a3b7ead8a3b9d2ec58042d0518746d086d620e6acd2be	2025-09-02 16:52:46.619489+08	::1	PostmanRuntime/7.45.0	2025-09-16 16:52:46.619564+08	\N	\N	\N	\N	\N	t
+019909a9-5e09-75ab-87f6-bca88a980637	10522ce0-65d7-4e90-8610-6285416d76db	d382b32690df132d0399f9e87e62f067907dc2dcd8cf36597463228896c24405	2025-09-02 17:01:58.664332+08	::1	PostmanRuntime/7.45.0	2025-09-16 17:01:58.664346+08	\N	\N	\N	\N	\N	t
+019909c3-36ad-7590-8905-58eba1c7a1a5	10522ce0-65d7-4e90-8610-6285416d76db	e77cf40ec3f1ea0bb04d7934b4db847765c454898c6e02aae8ef169a4ccebc92	2025-09-02 17:30:12.498298+08	::1	PostmanRuntime/7.45.0	2025-09-16 17:30:12.498395+08	\N	\N	\N	\N	\N	t
 \.
 
 
@@ -34243,8 +34291,7 @@ COPY public.user_groups (ug_uuid, user_uuid, group_code, created_at, updated_at)
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.users (user_uuid, email, password_hash, username, id_number, birthday, mobile_number, postal_code, address, is_active, created_at, updated_at) FROM stdin;
-a7685947-a7bf-4c00-abaf-e81b180ec7f4	suis@example.com	$2a$11$egO4lZTTcSyQoDKnRIK16euFiDCFXCrdQb9lCJKhhia8NYI3hKG2i	Suis	D209037607	19950121	0913323256	333	桃園市龜山區忠義路60號1樓	f	2025-08-29 11:42:16.96172+08	2025-08-29 11:42:16.961823+08
+COPY public.users (user_uuid, email, password_hash, username, id_number, birthday, mobile_number, postal_code, address, is_active, is_locked, created_at, updated_at, last_login_at, email_verified_at) FROM stdin;
 \.
 
 
@@ -34290,6 +34337,14 @@ ALTER TABLE ONLY public.customers
 
 ALTER TABLE ONLY public.customers
     ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: email_verification_tokens email_verification_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.email_verification_tokens
+    ADD CONSTRAINT email_verification_tokens_pkey PRIMARY KEY (token_id);
 
 
 --
@@ -34365,19 +34420,39 @@ ALTER TABLE ONLY public.user_groups
 
 
 --
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_email_key UNIQUE (email);
-
-
---
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (user_uuid);
+
+
+--
+-- Name: idx_evt_expires; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_evt_expires ON public.email_verification_tokens USING btree (expires_at);
+
+
+--
+-- Name: idx_evt_user; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_evt_user ON public.email_verification_tokens USING btree (user_uuid);
+
+
+--
+-- Name: idx_id_number; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX idx_id_number ON public.users USING btree (id_number);
+
+
+--
+-- Name: idx_mobile_number; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX idx_mobile_number ON public.users USING btree (mobile_number);
 
 
 --
@@ -34413,6 +34488,13 @@ CREATE INDEX idx_refresh_tokens_revoked ON public.refresh_tokens USING btree (re
 --
 
 CREATE INDEX idx_refresh_tokens_user_uuid ON public.refresh_tokens USING btree (user_uuid);
+
+
+--
+-- Name: idx_users_email; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX idx_users_email ON public.users USING btree (email);
 
 
 --

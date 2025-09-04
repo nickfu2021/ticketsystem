@@ -42,6 +42,7 @@ public class RefreshToken
 
     [Column("last_used_ip")]
     public string? LastUsedIp { get; set; }
-
-    public bool IsActive => RevokedAt == null && ExpiresAt > DateTime.UtcNow;
+    
+    [Column("is_active")]
+    public bool IsActive { get; set; }
 }

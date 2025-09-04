@@ -6,7 +6,7 @@ namespace TicketSystemApi.Services.Auth;
 public interface IAuthService
 {
     Task<(ServiceResult<LoginResultDto> Result, string? RefreshToken)> LoginAsync(string email, string password, string ip, string userAgent);
-    Task<ServiceResult<UserDto>> RegisterAsync(RegisterDto dto);
-    Task<RefreshResultDto> RefreshAsync(string refreshTokenPlain, string? ip, string? userAgent);
+    Task<ServiceResult<Unit>> RegisterAsync(RegisterDto dto, string? ip, string? ua);
+    Task<(RefreshResultDto Result, string? NewRtPlain)> RefreshAsync(string refreshTokenPlain, string? ip, string? userAgent);
     Task<bool> LogoutAsync(string refreshTokenPlain, string? ip);
 }
