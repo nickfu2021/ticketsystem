@@ -63,4 +63,24 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    public async Task AddEmailVerificationTokenAsync(UserToken token)
+    {
+        // 可選：先撤銷舊的同類型未使用 token（確保唯一）
+        var activeToken = await _context.UserTokens
+            .Where(x => x.UserUuid == token.UserUuid &&
+                        x.Purpose == "email_verify" &&
+                        x.ConsumedAt == null &&
+                        x.RevokedAt == null &&
+                        x.ExpiresAt > DateTime.UtcNow)
+            .FirstOrDefaultAsync();
+
+        if (activeToken != null)
+        {
+            activeToken.RevokedAt = DateTime.UtcNow;
+        }
+
+        await _context.UserTokens.AddAsync(token);
+    }
+
 }

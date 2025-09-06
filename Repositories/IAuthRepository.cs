@@ -10,8 +10,8 @@ public interface IAuthRepository
     Task<bool> EmailExistsAsync(string email);
     Task<bool> IdNumberExistsAsync(string idNumber);
     Task<bool> MobileExistsAsync(string mobileNumber);
-    Task AddEmailVerificationTokenAsync(EmailVerificationToken token);
-    Task<EmailVerificationToken?> GetLatestActiveEmailTokenAsync(Guid userUuid);
+    Task AddEmailVerificationTokenAsync(UserToken token);
+    //Task<EmailVerificationToken?> GetLatestActiveEmailTokenAsync(Guid userUuid);
     // Refresh Token 相關
     Task AddRefreshTokenAsync(RefreshToken token);
     Task<RefreshToken?> GetActiveRefreshTokenByHashAsync(string tokenHash);

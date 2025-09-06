@@ -50,10 +50,10 @@ public class UserService(IUserRepository userRepository, IPostalRepository posta
             return ServiceResult<UserDto>.Fail("此信箱已被註冊");
         }
 
-        if (await _userRepository.IdnumberExists(user.IdNumber))
-        {
-            return ServiceResult<UserDto>.Fail("此身分證號碼已被註冊");
-        }
+        // if (await _userRepository.IdnumberExists(user.IdNumber))
+        // {
+        //     return ServiceResult<UserDto>.Fail("此身分證號碼已被註冊");
+        // }
 
         //string addressDetail = $"{dto.City}{dto.District}{dto.AddressDetail}";
         //user.Address = addressDetail;

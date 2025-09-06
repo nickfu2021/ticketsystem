@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TicketSystemApi.Common;
 using System.IdentityModel.Tokens.Jwt;
+using TicketSystemApi.Configurations;
 
 namespace TicketSystemApi.Services.Auth;
 

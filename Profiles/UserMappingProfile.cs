@@ -12,7 +12,7 @@ public class UserMappingProfile : AutoMapper.Profile
         CreateMap<UserUpdateDto, User>();
         CreateMap<RegisterDto, User>()
             .ForMember(dest => dest.Address,
-                       opt => opt.MapFrom(src => $"{src.City}{src.District}{src.AddressDetail}"))
+                       opt => opt.MapFrom(src => $"{src.City}{src.District}{src.Address}"))
             .ForMember(dest => dest.PasswordHash,
                        opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt,

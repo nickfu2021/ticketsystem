@@ -6,6 +6,7 @@ using TicketSystemApi.Configurations;
 using TicketSystemApi.Dtos;
 using TicketSystemApi.Models;
 using TicketSystemApi.Repositories;
+using TicketSystemApi.Utils;
 
 namespace TicketSystemApi.Services.Auth;
 
@@ -92,14 +93,13 @@ public class AuthService(IAuthRepository authRepository, IPostalRepository posta
         {
             UserUuid = Guid.NewGuid(),
             Email = dto.Email.Trim().ToLowerInvariant(),
-            AuthProvider = "local",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Username = string.IsNullOrWhiteSpace(dto.Username) ? null : dto.Username,
             IdNumber = string.IsNullOrWhiteSpace(dto.IdNumber) ? null : dto.IdNumber,
             Birthday = string.IsNullOrWhiteSpace(dto.Birthday) ? null : dto.Birthday,
-            MobileNumber = string.IsNullOrWhiteSpace(dto.MobileNumber) ? null : dto.MobileNumber,
+            MobileNumber = dto.MobileNumber,
             PostalCode = string.IsNullOrWhiteSpace(dto.PostalCode) ? null : dto.PostalCode,
-            Address = string.IsNullOrWhiteSpace(dto.AddressDetail) ? null : dto.AddressDetail,
+            Address = string.IsNullOrWhiteSpace(dto.Address) ? null : dto.Address,
             IsActive = false,          // email 未驗證前不啟用
             IsLocked = false,
             CreatedAt = now,
@@ -109,23 +109,27 @@ public class AuthService(IAuthRepository authRepository, IPostalRepository posta
         };
 
         // 3) 建立 Email 驗證 Token（只把 hash 存 DB；純文字放信中）
-        var plainToken = RefreshTokenUtil.GeneratePlainToken(64); // 高熵字串
-        var tokenHash = RefreshTokenUtil.Hash(plainToken, _jwt.RefreshTokenPepper);
+        var plainToken = SecureTokenUtil.GenerateToken(64); // 高熵字串
+        var tokenHash = SecureTokenUtil.Hash(plainToken, _jwt.RefreshTokenPepper);
 
-        var evt = new EmailVerificationToken
+        var userToken = new UserToken
         {
-            TokenId = Guid.NewGuid(),
+            TokenUuid = Guid.NewGuid(),
             UserUuid = user.UserUuid,
+            Purpose = "email_verify",
             TokenHash = tokenHash,
-            ExpiresAt = now.AddHours(24),
             CreatedAt = now,
-            CreatedIp = ip,
-            CreatedUa = ua
+            ExpiresAt = now.AddHours(24),
+            ConsumedAt = null,
+            RevokedAt = null,
+            IpCreated = ip,
+            UaCreated = ua,
+            Meta = "{}"
         };
 
         // 4) 儲存（建議同一個交易）
         await _authRepository.CreateUserAsync(user);
-        await _authRepository.AddEmailVerificationTokenAsync(evt);
+        await _authRepository.AddEmailVerificationTokenAsync(userToken);
         await _authRepository.SaveChangesAsync();
 
         // 5) 寄出驗證信

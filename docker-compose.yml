@@ -27,11 +27,13 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./document/concert_test_backup.sql:/docker-entrypoint-initdb.d/concert_test_backup.sql:ro
     networks:
       - devnet
 
 networks:
   devnet:
+
 
 volumes:
   pgdata:
