@@ -6,11 +6,19 @@ services:
       dockerfile: .devcontainer/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:5000 # 強制 Email 指向 MailHog
+      - Email__Host=mailhog
+      - Email__Port=1025
+      - Email__EnableSsl=false
+      - Email__From=noreply@tickets.local
+      - Email__Username=
+      - Email__Password=
     container_name: ticketsystemapi
     ports:
       - "5000:5000"
     depends_on:
       - db
+      - mailhog
     networks:
       - devnet
     volumes:
@@ -30,6 +38,16 @@ services:
       - ./document/concert_test_backup.sql:/docker-entrypoint-initdb.d/concert_test_backup.sql:ro
     networks:
       - devnet
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    networks:
+      - devnet
+    restart: unless-stopped
 
 networks:
   devnet:

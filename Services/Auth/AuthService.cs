@@ -134,12 +134,12 @@ public class AuthService(
         };
 
         await _authRepository.CreateUserAsync(user);
-        // await _authRepository.AddEmailVerificationTokenAsync(userToken);
+        await _authRepository.AddEmailVerificationTokenAsync(userToken);
         // await _authRepository.SaveChangesAsync();
 
         // 寄信（你目前公司網路擋 SMTP，先保留）
-        // var link = $"{_frontend.BaseUrl}/auth/verify-email?uid={user.UserUuid}&token={Uri.EscapeDataString(plainToken)}";
-        // await _emailService.SendAsync(user.Email, "請完成您的 Email 驗證", $"<a href='{link}'>{link}</a>");
+        var link = $"{_frontend.BaseUrl}/auth/verify-email?uid={user.UserUuid}&token={Uri.EscapeDataString(plainToken)}";
+        await _emailService.SendAsync(user.Email, "請完成您的 Email 驗證", $"<a href='{link}'>{link}</a>");
 
         return ServiceResult<Unit>.Ok(Unit.Value);
     }

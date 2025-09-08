@@ -1,8 +1,6 @@
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
-using TicketSystemApi.Configurations;
-using TicketSystemApi.Services;
 
 namespace TicketSystemApi.Services;
 
@@ -19,28 +17,36 @@ public class MailOptions
 
 public class EmailService : IEmailService
 {
-    private readonly SmtpClient _smtp;
+    private readonly MailOptions _opt;
     private readonly MailAddress _from;
 
     public EmailService(IOptions<MailOptions> options)
     {
-        var opt = options.Value;
+        _opt = options.Value;
 
-        if (string.IsNullOrWhiteSpace(opt.From))
+        if (string.IsNullOrWhiteSpace(_opt.From))
             throw new InvalidOperationException("Mail.From 未設定，請在設定檔或環境變數中提供寄件者信箱。");
 
-        _from = new MailAddress(opt.From, opt.DisplayName ?? string.Empty);
-        _smtp = new SmtpClient(opt.Host, opt.Port)
-        {
-            EnableSsl = opt.EnableSsl,
-            Credentials = new NetworkCredential(opt.Username, opt.Password)
-        };
+        _from = new MailAddress(_opt.From, _opt.DisplayName ?? string.Empty);
     }
 
     public async Task SendAsync(string to, string subject, string htmlBody)
     {
         if (string.IsNullOrWhiteSpace(to))
             throw new ArgumentException("收件者信箱不可為空。", nameof(to));
+
+        using var client = new SmtpClient(_opt.Host, _opt.Port)
+        {
+            EnableSsl = _opt.EnableSsl,
+            DeliveryMethod = SmtpDeliveryMethod.Network,
+            UseDefaultCredentials = false
+        };
+
+        // MailHog 可不需要帳密
+        if (!string.IsNullOrWhiteSpace(_opt.Username))
+        {
+            client.Credentials = new NetworkCredential(_opt.Username, _opt.Password);
+        }
 
         using var msg = new MailMessage
         {
@@ -51,7 +57,7 @@ public class EmailService : IEmailService
         };
         msg.To.Add(new MailAddress(to));
 
-        await _smtp.SendMailAsync(msg);
+        await client.SendMailAsync(msg);
     }
 
     public async Task SendSecurityAlertAsync(string toEmail, string? ip, string? userAgent)
