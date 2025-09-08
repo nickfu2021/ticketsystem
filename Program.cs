@@ -8,29 +8,50 @@ using FluentValidation;
 using TicketSystemApi.Repositories;
 using TicketSystemApi.Services;
 using TicketSystemApi.Validators;
-using TicketSystemApi.Middleware;
 using TicketSystemApi.Services.Auth;
 using System.Security.Claims;
 using Microsoft.Extensions.Options;
 using TicketSystemApi.Configurations;
+using TicketSystemApi.Common;
+using Microsoft.AspNetCore.Mvc;
+using TicketSystemApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ----- 設定 & DI -----
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<FrontendSettings>(builder.Configuration.GetSection("Frontend"));
+builder.Services.Configure<MailOptions>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
+
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IPostalRepository, PostalRepository>();
+builder.Services.AddScoped<ILocationRepository, LocationRepository>();
+builder.Services.AddScoped<ILocationService, LocationService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// ----- Auth -----
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        // 這裡透過 DI 延後解析 jwtSettings（避免 null）
-        var jwtSection = builder.Configuration.GetSection("JwtSettings");
-        var settings = jwtSection.Get<JwtSettings>() ?? throw new InvalidOperationException("JwtSettings is missing");
+        var settings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()
+                       ?? throw new InvalidOperationException("JwtSettings is missing");
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -47,12 +68,34 @@ builder.Services
         };
     });
 
-
 builder.Services.AddAuthorization();
 
-builder.Services.AddControllers();
+// ----- MVC + FluentValidation + ModelState 統一輸出 -----
+builder.Services
+    .AddControllers()
+    .ConfigureApiBehaviorOptions(opt =>
+    {
+        opt.InvalidModelStateResponseFactory = ctx =>
+        {
+            var fieldErrors = ctx.ModelState
+                .Where(kv => kv.Value?.Errors?.Any() == true)
+                .SelectMany(kv => kv.Value!.Errors.Select(err => new FieldError
+                {
+                    Field = kv.Key,
+                    Message = err.ErrorMessage
+                }))
+                .ToList();
 
-// 5) Swagger + JWT
+            var payload = ServiceResult<object?>.Fail("欄位驗證錯誤", fieldErrors);
+            return new BadRequestObjectResult(payload);
+        };
+    });
+
+builder.Services.AddFluentValidationAutoValidation();
+// 只要挑一個你專案內的 Validator 類別來讓掃描器定位組件即可
+builder.Services.AddValidatorsFromAssemblyContaining<OrderUpdateDtoValidator>();
+
+// ----- Swagger -----
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -68,65 +111,32 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityDefinition("Bearer", jwtScheme);
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
-        {
-            jwtScheme,
-            Array.Empty<string>()
-        }
+        { jwtScheme, Array.Empty<string>() }
     });
 });
 
-
-/*
-AddFluentValidationAutoValidation
-啟用 伺服器端自動驗證
-ASP.NET Core 在模型綁定（ModelState）時，會自動執行對應的 Validator。
-你不需要在 Controller 中手動呼叫 validator.Validate(...)
-這是 FluentValidation 最基本的功能
-
-.AddFluentValidationClientsideAdapters()
-啟用 前端 JavaScript 客戶端驗證支援（例如 Razor Pages / Blazor Server）
-會把你設定的規則自動轉換成 HTML data-val-* 屬性
-僅適用於 Razor Page、Blazor Server，搭配 jQuery Validation 使用
-如果你用的是 API + Vue/React/Next.js，就不需要這個
-*/
-builder.Services.AddFluentValidationAutoValidation();
-//builder.Services.AddValidatorsFromAssemblyContaining<Program>(); 避免耦合 Program
-builder.Services.AddValidatorsFromAssemblyContaining<OrderUpdateDtoValidator>();    //只要註冊其中「任一個」即可掃描整個專案的 Validators
-
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<AppDbContext>(options =>
-options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddScoped<IPostalRepository, PostalRepository>();
-builder.Services.AddScoped<ILocationRepository, LocationRepository>();
-builder.Services.AddScoped<ILocationService, LocationService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IEventRepository, EventRepository>();
-builder.Services.AddScoped<IEventService, EventService>();
-builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-builder.Services.AddScoped<IOrderService, OrderService>();
-
-
 var app = builder.Build();
 
-app.UseMiddleware<ValidationExceptionMiddleware>();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-// Swagger 僅在開發時啟用
+// ----- 例外處理（建議：開發用 Dev Page；正式用自訂 Middleware）-----
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    // 讓自訂的 ApiExceptionMiddleware 接手所有未處理例外
+    app.UseMiddleware<ApiExceptionMiddleware>();
+}
+
+// ※ 想在開發環境也用自訂例外頁，可把上面 else 改成無條件使用 ApiExceptionMiddleware，並移除 DeveloperExceptionPage。
+
+// ----- Auth -----
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
-//app.UseHttpsRedirection();
-app.Run();
+// app.UseHttpsRedirection(); // 需 HTTPS 再開
 
+app.Run();

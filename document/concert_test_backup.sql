@@ -8,7 +8,7 @@
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
--- SET transaction_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -130,24 +130,6 @@ CREATE VIEW public.customers_order AS
 
 
 ALTER VIEW public.customers_order OWNER TO postgres;
-
---
--- Name: email_verification_tokens; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.email_verification_tokens (
-    token_id uuid NOT NULL,
-    user_uuid uuid NOT NULL,
-    token_hash character varying(255) NOT NULL,
-    expires_at timestamp with time zone NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    created_ip character varying(64),
-    created_ua character varying(255),
-    consumed_at timestamp with time zone
-);
-
-
-ALTER TABLE public.email_verification_tokens OWNER TO postgres;
 
 --
 -- Name: events_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -337,6 +319,29 @@ CREATE TABLE public.user_groups (
 ALTER TABLE public.user_groups OWNER TO postgres;
 
 --
+-- Name: user_tokens; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.user_tokens (
+    token_uuid uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_uuid uuid NOT NULL,
+    purpose text NOT NULL,
+    token_hash bytea NOT NULL,
+    sent_to text,
+    new_email text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    consumed_at timestamp with time zone,
+    revoked_at timestamp with time zone,
+    ip_created text,
+    ua_created text,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE public.user_tokens OWNER TO postgres;
+
+--
 -- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -400,14 +405,6 @@ COPY public.customers (id, name, email) FROM stdin;
 11	suis	suis@example.com
 1	n-buna	n-buna@example.com
 2	Ryo	Ryo@example.com
-\.
-
-
---
--- Data for Name: email_verification_tokens; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.email_verification_tokens (token_id, user_uuid, token_hash, expires_at, created_at, created_ip, created_ua, consumed_at) FROM stdin;
 \.
 
 
@@ -34276,6 +34273,12 @@ COPY public.refresh_tokens (rt_uuid, user_uuid, token_hash, created_at, created_
 019909a0-f1aa-7c37-a78e-018b907aac34	a7685947-a7bf-4c00-abaf-e81b180ec7f4	c52bd4b78e9bb6671e0a3b7ead8a3b9d2ec58042d0518746d086d620e6acd2be	2025-09-02 16:52:46.619489+08	::1	PostmanRuntime/7.45.0	2025-09-16 16:52:46.619564+08	\N	\N	\N	\N	\N	t
 019909a9-5e09-75ab-87f6-bca88a980637	10522ce0-65d7-4e90-8610-6285416d76db	d382b32690df132d0399f9e87e62f067907dc2dcd8cf36597463228896c24405	2025-09-02 17:01:58.664332+08	::1	PostmanRuntime/7.45.0	2025-09-16 17:01:58.664346+08	\N	\N	\N	\N	\N	t
 019909c3-36ad-7590-8905-58eba1c7a1a5	10522ce0-65d7-4e90-8610-6285416d76db	e77cf40ec3f1ea0bb04d7934b4db847765c454898c6e02aae8ef169a4ccebc92	2025-09-02 17:30:12.498298+08	::1	PostmanRuntime/7.45.0	2025-09-16 17:30:12.498395+08	\N	\N	\N	\N	\N	t
+01992802-9994-78a0-88c8-d7f956f188ae	82ae37af-04a7-4913-8ea0-230e5d569683	f85d3fa8679f9ece723a18333a32e84e8592934c2db4d6d77337b2b5a0b5c98d	2025-09-08 14:28:03.089297+08	::1	PostmanRuntime/7.45.0	2025-09-22 14:28:03.089381+08	\N	\N	\N	\N	\N	f
+01992845-ae11-76ab-8322-062d14449b11	82ae37af-04a7-4913-8ea0-230e5d569683	f41f0cd379b7f57ccba4fb0e863d4ad631d4bdf95a6fdc4a4351fe9826069697	2025-09-08 15:41:19.218063+08	::1	PostmanRuntime/7.45.0	2025-09-22 15:41:19.21814+08	\N	\N	\N	\N	\N	f
+01992865-aa6f-70ce-8162-364b97dac4ca	82ae37af-04a7-4913-8ea0-230e5d569683	da990c22c50e8a04418c282c15106581e6772566e5d885d07eecdc9aafbed029	2025-09-08 16:16:15.454421+08	::1	PostmanRuntime/7.45.0	2025-09-22 16:16:15.454534+08	\N	\N	\N	\N	\N	f
+01992866-2bec-7e34-ab64-75be66b30385	82ae37af-04a7-4913-8ea0-230e5d569683	c80813fea1f14a2f1ebcfa4245d841b4420f1e098e80446c90cff9c335335cc6	2025-09-08 16:16:48.619832+08	::1	PostmanRuntime/7.45.0	2025-09-22 16:16:48.619832+08	\N	\N	\N	\N	\N	f
+01992870-a995-79e3-a968-243be03e2865	82ae37af-04a7-4913-8ea0-230e5d569683	6fb66f915225550fa35d3c2ba40a78793f622804c6003000a71b2618609bc2b2	2025-09-08 16:28:16.128447+08	::1	PostmanRuntime/7.45.0	2025-09-22 16:28:16.128539+08	\N	\N	\N	\N	\N	f
+0199288c-7ee9-76b8-a1d3-f8049f304e46	bdc6e594-85d9-454c-ae76-5c2164059843	1658bb540f66de0e52fa3abe50b8269200c2c25596043bcb2ff731df81e024bf	2025-09-08 16:58:40.225251+08	::1	PostmanRuntime/7.45.0	2025-09-22 16:58:40.225362+08	\N	\N	\N	\N	\N	f
 \.
 
 
@@ -34288,10 +34291,20 @@ COPY public.user_groups (ug_uuid, user_uuid, group_code, created_at, updated_at)
 
 
 --
+-- Data for Name: user_tokens; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.user_tokens (token_uuid, user_uuid, purpose, token_hash, sent_to, new_email, created_at, expires_at, consumed_at, revoked_at, ip_created, ua_created, meta) FROM stdin;
+\.
+
+
+--
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.users (user_uuid, email, password_hash, username, id_number, birthday, mobile_number, postal_code, address, is_active, is_locked, created_at, updated_at, last_login_at, email_verified_at) FROM stdin;
+28b9bc16-ad94-4868-b141-bc4596ff7b9c	n-buna@example.com	$2a$11$6CoH9jDcbKq9Bv4aLNCPdutjX613gEYGqDWQ0Uc1AnKcDYhT4SL7u	n-buna	\N	19961223	0955123321	115	臺北市南港區經貿二路135號13樓	f	f	2025-09-08 16:49:50.51161+08	2025-09-08 16:49:50.51161+08	\N	\N
+bdc6e594-85d9-454c-ae76-5c2164059843	suis@example	$2a$11$Q7SwoTHGtQTMYSIT1W0Uj.kp03UTKqhIompxlYT64dt9tqNusXiP.	\N	\N	\N	0958121222	\N	\N	f	f	2025-09-08 16:57:56.812899+08	2025-09-08 16:57:56.812899+08	\N	\N
 \.
 
 
@@ -34337,14 +34350,6 @@ ALTER TABLE ONLY public.customers
 
 ALTER TABLE ONLY public.customers
     ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
-
-
---
--- Name: email_verification_tokens email_verification_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.email_verification_tokens
-    ADD CONSTRAINT email_verification_tokens_pkey PRIMARY KEY (token_id);
 
 
 --
@@ -34420,25 +34425,19 @@ ALTER TABLE ONLY public.user_groups
 
 
 --
+-- Name: user_tokens user_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_tokens
+    ADD CONSTRAINT user_tokens_pkey PRIMARY KEY (token_uuid);
+
+
+--
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (user_uuid);
-
-
---
--- Name: idx_evt_expires; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_evt_expires ON public.email_verification_tokens USING btree (expires_at);
-
-
---
--- Name: idx_evt_user; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_evt_user ON public.email_verification_tokens USING btree (user_uuid);
 
 
 --
@@ -34495,6 +34494,27 @@ CREATE INDEX idx_refresh_tokens_user_uuid ON public.refresh_tokens USING btree (
 --
 
 CREATE UNIQUE INDEX idx_users_email ON public.users USING btree (email);
+
+
+--
+-- Name: ix_user_tokens_expired; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_user_tokens_expired ON public.user_tokens USING btree (expires_at);
+
+
+--
+-- Name: ix_user_tokens_lookup; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_user_tokens_lookup ON public.user_tokens USING btree (user_uuid, purpose, expires_at);
+
+
+--
+-- Name: ux_user_tokens_token_hash; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX ux_user_tokens_token_hash ON public.user_tokens USING btree (token_hash);
 
 
 --

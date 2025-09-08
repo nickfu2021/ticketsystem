@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using TicketSystemApi.Dtos;
+using TicketSystemApi.ApiSupport;       // 內含 this.ToHttpResult(...) 擴充方法
+using TicketSystemApi.Common;          // ServiceResult<T>
+using TicketSystemApi.Dtos;            // LoginResultDto / TokenDto
 using TicketSystemApi.Services.Auth;
 
 namespace TicketSystemApi.Controllers
@@ -11,6 +13,8 @@ namespace TicketSystemApi.Controllers
         private readonly IAuthService _service = service;
 
         [HttpPost("login")]
+        [ProducesResponseType(typeof(ServiceResult<LoginResultDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ServiceResult<object>), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -18,58 +22,59 @@ namespace TicketSystemApi.Controllers
 
             var (result, rt) = await _service.LoginAsync(dto.Email, dto.Password, ip, ua);
 
-            if (!result.Success)
-                return Unauthorized(result);
-
-            if (!string.IsNullOrWhiteSpace(rt))
+            // 設置 RefreshToken Cookie（僅在登入成功且有值時）
+            if (result.Success && !string.IsNullOrWhiteSpace(rt))
             {
                 Response.Cookies.Append("rt", rt, new CookieOptions
                 {
-                    HttpOnly = true,    //禁止 JavaScript 存取（避免 XSS）
-                    Secure = true,  //只在 HTTPS 傳輸
-                    SameSite = SameSiteMode.Strict, //限定同網域才送出，防止 CSRF
+                    HttpOnly = true,                 // 禁止 JS 讀取
+                    Secure = true,                   // 僅 HTTPS
+                    SameSite = SameSiteMode.Strict,  // 防 CSRF
                     Expires = DateTimeOffset.UtcNow.AddDays(14)
                 });
             }
 
-            return Ok(result);
+            // 統一輸出（成功 200；失敗交由 ToHttpResult 的 Map 決定）
+            return this.ToHttpResult(result);
         }
 
-
         [HttpPost("register")]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)] //Swagger 註解（加強開發體驗）
-        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ServiceResult<Unit>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ServiceResult<object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
             var ua = Request.Headers.UserAgent.ToString();
 
             var result = await _service.RegisterAsync(dto, ip, ua);
-            if (!result.Success)
-            {
-                return BadRequest(result.ErrorMessage);
-            }
-
-            return Ok(result);
+            // 註冊成功用 201 Created（ToHttpResult 第二參數指定成功狀態碼）
+            return this.ToHttpResult(result, StatusCodes.Status201Created);
         }
 
-
         [HttpPost("refresh")]
+        [ProducesResponseType(typeof(ServiceResult<TokenDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ServiceResult<TokenDto>), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Refresh()
         {
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
             var ua = Request.Headers.UserAgent.ToString();
 
-            // 若 RT 放在 Cookie
+            // 1) 從 Cookie 取出 RT
             var rtPlain = Request.Cookies["rt"];
             if (string.IsNullOrWhiteSpace(rtPlain))
-                return Unauthorized(new { ok = false, error = "missing_refresh_token" });
+            {
+                // 缺少 RT → 401 + 統一包裝
+                return Unauthorized(ServiceResult<TokenDto>.Fail("未授權")); // 或 "missing_refresh_token"
+            }
 
+            // 2) 呼叫服務
             var (result, newRtPlain) = await _service.RefreshAsync(rtPlain, ip, ua);
 
-            if (!result.Ok)
+            // 3) 若失敗，直接 401（避免 MapStatusCode 把某些訊息判成 400）
+            if (!result.Success)
                 return Unauthorized(result);
 
+            // 4) 成功則旋轉新 RT Cookie（如有）
             if (!string.IsNullOrWhiteSpace(newRtPlain))
             {
                 Response.Cookies.Append("rt", newRtPlain, new CookieOptions
@@ -81,19 +86,21 @@ namespace TicketSystemApi.Controllers
                 });
             }
 
+            // 5) 成功回 200 帶 accessToken/expiresIn
             return Ok(result);
         }
 
         [HttpPost("logout")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> Logout()
         {
             var rt = Request.Cookies["rt"];
-            if (string.IsNullOrWhiteSpace(rt)) return Ok();
-
-            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-            await _service.LogoutAsync(rt, ip);
-
-            Response.Cookies.Delete("rt");
+            if (!string.IsNullOrWhiteSpace(rt))
+            {
+                var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+                await _service.LogoutAsync(rt, ip);
+                Response.Cookies.Delete("rt");
+            }
             return Ok();
         }
     }

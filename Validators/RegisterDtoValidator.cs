@@ -21,24 +21,15 @@ public class RegisterDtoValidator : AbstractValidator<RegisterDto>
             .Matches(@"[a-z]").WithMessage("密碼需包含至少一個小寫英文")
             .Matches(@"\d").WithMessage("密碼需包含至少一個數字")
             .Matches(@"[!@#$%^&*(),.?:{}|<>_\-+=\\/\[\]""';`~]").WithMessage("密碼需包含至少一個符號");
-       RuleFor(u => u.Username)
-            .NotEmpty().WithMessage("姓名不可空白")
+        RuleFor(u => u.Username)
             .MaximumLength(20).WithMessage("姓名長度不可超過 20 個字元");
         RuleFor(u => u.IdNumber)
-            .NotEmpty().WithMessage("身分證號碼不可空白")
-            .Must(IsValidTaiwanId).WithMessage("身分證格式不正確");   
+            .Must(IsValidTaiwanId).WithMessage("身分證格式不正確");
         RuleFor(u => u.MobileNumber)
             .NotEmpty().WithMessage("手機號碼不可空白")
             .Matches(@"^09\d{8}$").WithMessage("手機號碼格式不正確");
         RuleFor(u => u.PostalCode)
-               .NotEmpty().WithMessage("郵遞區號不可空白")
                .Matches(@"^\d{3}$").WithMessage("郵遞區號格式須為 3 碼數字");
-        RuleFor(u => u.City)
-            .NotEmpty().WithMessage("縣市不可空白");
-        RuleFor(u => u.District)
-            .NotEmpty().WithMessage("鄉鎮區不可空白");
-        RuleFor(u => u.AddressDetail)
-            .NotEmpty().WithMessage("詳細地址不可空白");
     }
 
     /// <summary>
@@ -46,11 +37,13 @@ public class RegisterDtoValidator : AbstractValidator<RegisterDto>
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    private bool IsValidTaiwanId(string id)
+    private bool IsValidTaiwanId(string? id)
     {
-        if (string.IsNullOrWhiteSpace(id) || id.Length != 10)
-            return false;
+        if (string.IsNullOrWhiteSpace(id))
+            return true;
 
+        if (id.Length != 10)
+            return false;
         /*
             1.英文字母 → 兩位數對應區碼（再拆為十位數,個位數）
             2.所有數字乘上固定權重 1(英文十位數),9(英文個位數),8,7,6,5,4,3,2,1

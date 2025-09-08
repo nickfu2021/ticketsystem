@@ -1,3 +1,68 @@
+一、請求一路怎麼走（從進站到出站）
+
+Client 發 API 請求（例：POST /api/auth/login，Body 是 LoginDto）。
+
+Middleware（中介軟體）前置區
+
+（正式環境）ApiExceptionMiddleware：負責攔所有未處理例外，把它們轉成
+ServiceResult<object?>.Fail("...") + 正確 HTTP 狀態碼（401/500…）。
+
+（開發環境）你用 DeveloperExceptionPage() 看除錯頁；也可改成同樣走 ApiExceptionMiddleware。
+
+MVC Model Binding + FluentValidation
+
+ASP.NET Core 將 JSON 反序列化成 LoginDto。
+
+FluentValidation 自動跑 RegisterDtoValidator/LoginDtoValidator ... 規則。
+
+若有欄位錯誤 → ModelState 會被標記為 invalid（400）。
+
+（重點）統一 ModelState 的 400 格式
+
+你在 Program.cs 用 ConfigureApiBehaviorOptions.InvalidModelStateResponseFactory = ...。
+
+這個掛點會在 MVC 要回 400 前觸發，我們把 ModelState 的錯誤轉成：
+
+{
+  "success": false,
+  "errorMessage": "欄位驗證錯誤",
+  "errors": [{"field":"Email","message":"電子信箱不可空白"}, ...],
+  "data": null
+}
+
+
+直接回 400 BadRequest，Controller 的 Action 根本不會被呼叫。
+
+Controller Action（只有通過驗證才會進來）
+
+你在 Action 裡呼叫 Service：var result = await _service.LoginAsync(...)
+
+Service 回的是 ServiceResult<T>（統一格式），Controller 用
+return this.ToHttpResult(result); 把成功/失敗對應到正確狀態碼並回相同包裝。
+
+Service（商業邏輯）
+
+成功 → ServiceResult<T>.Ok(data)，data 是乾淨的 DTO（不再含 ok/error 欄位）。
+
+失敗 → ServiceResult<T>.Fail("錯誤訊息") / Fail("訊息", fieldErrors)
+
+重點：成功/失敗的語意只在外層 ServiceResult.Success，data 永遠只放資料。
+
+回傳到 Client
+
+成功（例如登入）→ 200 OK +
+
+{"success":true,"errorMessage":null,"errors":null,"data":{"accessToken":"...","expiresIn":3600,"userName":"..."}}  
+
+
+註冊成功 → 201 Created（你用 ToHttpResult(result, 201) 指定）。
+
+欄位驗證失敗 → 400（由 InvalidModelStateResponseFactory 統一包）。
+
+未授權/Token 失效 → 401（由 ApiExceptionMiddleware 或你在 Controller 明確回）。
+
+其他未處理例外 → 500（由 ApiExceptionMiddleware 統一包）。
+
 
 ******** 好用的 FluentValidation *********
 

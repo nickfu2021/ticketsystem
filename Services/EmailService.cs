@@ -6,29 +6,52 @@ using TicketSystemApi.Services;
 
 namespace TicketSystemApi.Services;
 
-public class EmailService(IOptions<SmtpSettings> smtp) : IEmailService
+public class MailOptions
 {
-    private readonly SmtpSettings _smtp = smtp.Value;
+    public string Host { get; set; } = "";
+    public int Port { get; set; } = 587;
+    public bool EnableSsl { get; set; } = true;
+    public string From { get; set; } = "";           // 寄件者 email
+    public string? DisplayName { get; set; }         // 寄件者顯示名稱
+    public string Username { get; set; } = "";
+    public string Password { get; set; } = "";
+}
+
+public class EmailService : IEmailService
+{
+    private readonly SmtpClient _smtp;
+    private readonly MailAddress _from;
+
+    public EmailService(IOptions<MailOptions> options)
+    {
+        var opt = options.Value;
+
+        if (string.IsNullOrWhiteSpace(opt.From))
+            throw new InvalidOperationException("Mail.From 未設定，請在設定檔或環境變數中提供寄件者信箱。");
+
+        _from = new MailAddress(opt.From, opt.DisplayName ?? string.Empty);
+        _smtp = new SmtpClient(opt.Host, opt.Port)
+        {
+            EnableSsl = opt.EnableSsl,
+            Credentials = new NetworkCredential(opt.Username, opt.Password)
+        };
+    }
 
     public async Task SendAsync(string to, string subject, string htmlBody)
     {
-        using var client = new SmtpClient(_smtp.Host, _smtp.Port)
+        if (string.IsNullOrWhiteSpace(to))
+            throw new ArgumentException("收件者信箱不可為空。", nameof(to));
+
+        using var msg = new MailMessage
         {
-            Credentials = new NetworkCredential(_smtp.Username, _smtp.Password),
-            EnableSsl = _smtp.EnableSsl
+            From = _from,
+            Subject = subject ?? string.Empty,
+            Body = htmlBody ?? string.Empty,
+            IsBodyHtml = true,
         };
+        msg.To.Add(new MailAddress(to));
 
-        var message = new MailMessage
-        {
-            From = new MailAddress(_smtp.From, _smtp.DisplayName),
-            Subject = subject,
-            Body = htmlBody,
-            IsBodyHtml = true
-        };
-
-        message.To.Add(to);
-
-        await client.SendMailAsync(message);
+        await _smtp.SendMailAsync(msg);
     }
 
     public async Task SendSecurityAlertAsync(string toEmail, string? ip, string? userAgent)

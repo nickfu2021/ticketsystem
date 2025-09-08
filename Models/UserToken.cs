@@ -21,7 +21,7 @@ public class UserToken
     public string Purpose { get; set; } = "email_verify";  
 
     [Column("token_hash")]
-    public byte[] TokenHash { get; set; } = Array.Empty<byte>();
+    public byte[] TokenHash { get; set; } = [];
 
     [Column("sent_to")]
     public string? SentTo { get; set; }
