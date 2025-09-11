@@ -81,6 +81,29 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
         }
 
         await _context.UserTokens.AddAsync(token);
+        await _context.SaveChangesAsync();
     }
 
+    public async Task<UserToken?> GetActiveEmailVerifyTokenByHashAsync(byte[] tokenHash)
+    {
+        return await _context.UserTokens
+            .AsTracking()
+            .FirstOrDefaultAsync(t =>
+                t.Purpose == "email_verify" &&
+                t.TokenHash == tokenHash &&
+                t.RevokedAt == null &&
+                t.ConsumedAt == null &&
+                t.ExpiresAt > DateTime.UtcNow);
+    }
+
+    public async Task VerifyEmailAndConsumeTokenAsync(UserToken token, DateTime now)
+    {
+        // 同個 DbContext 下原子提交
+        var user = await _context.Users.FirstAsync(u => u.UserUuid == token.UserUuid);
+        user.EmailVerifiedAt = now;
+        user.IsActive = true;
+        token.ConsumedAt = now;
+
+        await _context.SaveChangesAsync();
+    }
 }

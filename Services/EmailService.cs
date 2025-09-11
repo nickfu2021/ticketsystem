@@ -1,33 +1,25 @@
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
+using TicketSystemApi.Common;
+using TicketSystemApi.Configurations;
+using TicketSystemApi.Utils;
 
 namespace TicketSystemApi.Services;
 
-public class MailOptions
-{
-    public string Host { get; set; } = "";
-    public int Port { get; set; } = 587;
-    public bool EnableSsl { get; set; } = true;
-    public string From { get; set; } = "";           // 寄件者 email
-    public string? DisplayName { get; set; }         // 寄件者顯示名稱
-    public string Username { get; set; } = "";
-    public string Password { get; set; } = "";
-}
-
 public class EmailService : IEmailService
 {
-    private readonly MailOptions _opt;
+    private readonly SmtpSettings _smpt;
     private readonly MailAddress _from;
 
-    public EmailService(IOptions<MailOptions> options)
+    public EmailService(IOptions<SmtpSettings> smptOptions)
     {
-        _opt = options.Value;
+        _smpt = smptOptions.Value;
 
-        if (string.IsNullOrWhiteSpace(_opt.From))
+        if (string.IsNullOrWhiteSpace(_smpt.From))
             throw new InvalidOperationException("Mail.From 未設定，請在設定檔或環境變數中提供寄件者信箱。");
 
-        _from = new MailAddress(_opt.From, _opt.DisplayName ?? string.Empty);
+        _from = new MailAddress(_smpt.From, _smpt.DisplayName ?? string.Empty);
     }
 
     public async Task SendAsync(string to, string subject, string htmlBody)
@@ -35,17 +27,17 @@ public class EmailService : IEmailService
         if (string.IsNullOrWhiteSpace(to))
             throw new ArgumentException("收件者信箱不可為空。", nameof(to));
 
-        using var client = new SmtpClient(_opt.Host, _opt.Port)
+        using var client = new SmtpClient(_smpt.Host, _smpt.Port)
         {
-            EnableSsl = _opt.EnableSsl,
+            EnableSsl = _smpt.EnableSsl,
             DeliveryMethod = SmtpDeliveryMethod.Network,
             UseDefaultCredentials = false
         };
 
         // MailHog 可不需要帳密
-        if (!string.IsNullOrWhiteSpace(_opt.Username))
+        if (!string.IsNullOrWhiteSpace(_smpt.Username))
         {
-            client.Credentials = new NetworkCredential(_opt.Username, _opt.Password);
+            client.Credentials = new NetworkCredential(_smpt.Username, _smpt.Password);
         }
 
         using var msg = new MailMessage
@@ -74,4 +66,5 @@ public class EmailService : IEmailService
 
         await SendAsync(toEmail, subject, htmlBody);
     }
+
 }

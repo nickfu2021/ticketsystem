@@ -8,7 +8,7 @@
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
--- SET transaction_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -34279,6 +34279,10 @@ COPY public.refresh_tokens (rt_uuid, user_uuid, token_hash, created_at, created_
 01992866-2bec-7e34-ab64-75be66b30385	82ae37af-04a7-4913-8ea0-230e5d569683	c80813fea1f14a2f1ebcfa4245d841b4420f1e098e80446c90cff9c335335cc6	2025-09-08 16:16:48.619832+08	::1	PostmanRuntime/7.45.0	2025-09-22 16:16:48.619832+08	\N	\N	\N	\N	\N	f
 01992870-a995-79e3-a968-243be03e2865	82ae37af-04a7-4913-8ea0-230e5d569683	6fb66f915225550fa35d3c2ba40a78793f622804c6003000a71b2618609bc2b2	2025-09-08 16:28:16.128447+08	::1	PostmanRuntime/7.45.0	2025-09-22 16:28:16.128539+08	\N	\N	\N	\N	\N	f
 0199288c-7ee9-76b8-a1d3-f8049f304e46	bdc6e594-85d9-454c-ae76-5c2164059843	1658bb540f66de0e52fa3abe50b8269200c2c25596043bcb2ff731df81e024bf	2025-09-08 16:58:40.225251+08	::1	PostmanRuntime/7.45.0	2025-09-22 16:58:40.225362+08	\N	\N	\N	\N	\N	f
+01992bf1-a562-7829-8a62-dec997ce8b77	bdc6e594-85d9-454c-ae76-5c2164059843	da625d3ceca9ffd24974718c2794b9807f6a9ad0d4df88210bac9cc837769503	2025-09-09 08:48:00.840861+08	::1	PostmanRuntime/7.45.0	2025-09-23 08:48:00.840983+08	2025-09-09 09:34:52.892726+08	\N	logout	\N	\N	f
+01992c20-da25-7e13-b52d-79f9ae794b6c	bdc6e594-85d9-454c-ae76-5c2164059843	09c12712aae223d9a74e178862dbb1107875c41f64c37eaa57e4130d478b25a3	2025-09-09 09:39:34.556272+08	::1	PostmanRuntime/7.45.0	2025-09-23 09:39:34.556356+08	\N	\N	\N	\N	\N	f
+01993274-d221-7d54-b528-4702e2b9e773	bdc6e594-85d9-454c-ae76-5c2164059843	4cf2268e8d6b991a3cc7a504574c549b0fe243c611bb51a762465cf45705d6a5	2025-09-10 15:09:00.829609+08	::1	PostmanRuntime/7.46.0	2025-09-24 15:09:00.829683+08	\N	\N	\N	\N	\N	t
+0199327c-5eb6-7bbc-95c6-34ffc775b104	bdc6e594-85d9-454c-ae76-5c2164059843	9d273209af507814193013bd1b66f9be1bd8cdd54e60485f5a0f11094d54a4fa	2025-09-10 15:17:15.573323+08	::1	PostmanRuntime/7.46.0	2025-09-24 15:17:15.573324+08	\N	\N	\N	\N	\N	t
 \.
 
 
@@ -34295,6 +34299,8 @@ COPY public.user_groups (ug_uuid, user_uuid, group_code, created_at, updated_at)
 --
 
 COPY public.user_tokens (token_uuid, user_uuid, purpose, token_hash, sent_to, new_email, created_at, expires_at, consumed_at, revoked_at, ip_created, ua_created, meta) FROM stdin;
+da690a37-2ffc-4203-b895-2f5aac746c30	1e3564fd-69ba-43d6-9897-b5a623bddd1c	email_verify	\\x68531ad3e32eb8467b6a2d5606112dae0113022231decdb811b3f24652c34e55	\N	\N	2025-09-11 14:59:33.39315+08	2025-09-12 14:59:33.39315+08	\N	\N	::1	PostmanRuntime/7.46.0	{}
+3db58fd9-15c8-4c3c-b5a9-afed410e66f3	3aa6e045-7c1c-4d07-89aa-8b2db242365f	email_verify	\\x5fb683cbba3efb7f509ef2d14bc43134cfdabd544d2fd5484956661a7a0e0b29	\N	\N	2025-09-11 15:01:44.371787+08	2025-09-12 15:01:44.371787+08	\N	\N	::1	PostmanRuntime/7.46.0	{}
 \.
 
 
@@ -34305,6 +34311,8 @@ COPY public.user_tokens (token_uuid, user_uuid, purpose, token_hash, sent_to, ne
 COPY public.users (user_uuid, email, password_hash, username, id_number, birthday, mobile_number, postal_code, address, is_active, is_locked, created_at, updated_at, last_login_at, email_verified_at) FROM stdin;
 28b9bc16-ad94-4868-b141-bc4596ff7b9c	n-buna@example.com	$2a$11$6CoH9jDcbKq9Bv4aLNCPdutjX613gEYGqDWQ0Uc1AnKcDYhT4SL7u	n-buna	\N	19961223	0955123321	115	臺北市南港區經貿二路135號13樓	f	f	2025-09-08 16:49:50.51161+08	2025-09-08 16:49:50.51161+08	\N	\N
 bdc6e594-85d9-454c-ae76-5c2164059843	suis@example	$2a$11$Q7SwoTHGtQTMYSIT1W0Uj.kp03UTKqhIompxlYT64dt9tqNusXiP.	\N	\N	\N	0958121222	\N	\N	f	f	2025-09-08 16:57:56.812899+08	2025-09-08 16:57:56.812899+08	\N	\N
+1e3564fd-69ba-43d6-9897-b5a623bddd1c	nickfu2021@example	$2a$11$9YkbIKlrdh4gGbTR05TSqu.sG348fWwqX380eoMoH1UVf1ETmyHTe	\N	\N	\N	0955192222	\N	\N	f	f	2025-09-11 14:59:33.39315+08	2025-09-11 14:59:33.39315+08	\N	\N
+3aa6e045-7c1c-4d07-89aa-8b2db242365f	rickfu2021@example	$2a$11$oeUZsEOuBrMNEl6tbBeoH.sF7GOEQKtNCYCjQn4I0CwXi9YOZ6kVe	\N	\N	\N	0942111232	\N	\N	f	f	2025-09-11 15:01:44.371787+08	2025-09-11 15:01:44.371787+08	\N	\N
 \.
 
 

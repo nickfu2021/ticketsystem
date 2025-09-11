@@ -8,7 +8,6 @@
       "applicationUrl": "http://localhost:5276",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "JwtSettings__RefreshTokenPepper": "vbnm7*90"
       }
     },
     "https": {

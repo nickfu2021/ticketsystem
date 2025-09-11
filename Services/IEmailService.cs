@@ -1,3 +1,5 @@
+using TicketSystemApi.Common;
+
 namespace TicketSystemApi.Services;
 
 public interface IEmailService

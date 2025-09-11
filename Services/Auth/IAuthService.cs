@@ -9,4 +9,5 @@ public interface IAuthService
     Task<ServiceResult<Unit>> RegisterAsync(RegisterDto dto, string? ip, string? ua);
     Task<(ServiceResult<TokenDto> Result, string? NewRtPlain)> RefreshAsync(string refreshTokenPlain, string? ip, string? userAgent);
     Task<bool> LogoutAsync(string refreshTokenPlain, string? ip);
+    Task<ServiceResult<Unit>> VerifyAsync(string token);
 }

@@ -17,7 +17,7 @@ public class AuthService(
     IEmailService emailService,
     ILogger<AuthService> logger,
     IOptions<JwtSettings> jwtOptions,
-    IOptions<FrontendSettings> frontend
+    IConfiguration config
 ) : IAuthService
 {
     private readonly IAuthRepository _authRepository = authRepository;
@@ -26,7 +26,7 @@ public class AuthService(
     private readonly IEmailService _emailService = emailService;
     private readonly ILogger _logger = logger;
     private readonly JwtSettings _jwt = jwtOptions.Value;
-    private readonly FrontendSettings _frontend = frontend.Value;
+    private readonly IConfiguration _config = config;
 
     // --- Login ---
 
@@ -49,7 +49,8 @@ public class AuthService(
             CreatedAt = DateTime.UtcNow,
             CreatedByIp = ip,
             UserAgent = userAgent,
-            ExpiresAt = DateTime.UtcNow.AddDays(_jwt.RefreshTokenDays)
+            ExpiresAt = DateTime.UtcNow.AddDays(_jwt.RefreshTokenDays),
+            IsActive = true
         };
         await _authRepository.AddRefreshTokenAsync(rt);
         await _authRepository.SaveChangesAsync();
@@ -135,10 +136,10 @@ public class AuthService(
 
         await _authRepository.CreateUserAsync(user);
         await _authRepository.AddEmailVerificationTokenAsync(userToken);
-        // await _authRepository.SaveChangesAsync();
 
         // 寄信（你目前公司網路擋 SMTP，先保留）
-        var link = $"{_frontend.BaseUrl}/auth/verify-email?uid={user.UserUuid}&token={Uri.EscapeDataString(plainToken)}";
+
+        var link = $"{_config["Email:VerifyBaseUrl"]}?token={Uri.EscapeDataString(plainToken)}";
         await _emailService.SendAsync(user.Email, "請完成您的 Email 驗證", $"<a href='{link}'>{link}</a>");
 
         return ServiceResult<Unit>.Ok(Unit.Value);
@@ -223,5 +224,23 @@ public class AuthService(
         await _authRepository.RevokeRefreshTokenAsync(dbToken, "logout");
         await _authRepository.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<ServiceResult<Unit>> VerifyAsync(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return ServiceResult<Unit>.Fail("missing_token");
+
+        var hash = SecureTokenUtil.Hash(token, _jwt.RefreshTokenPepper);
+
+        var dbToken = await _authRepository.GetActiveEmailVerifyTokenByHashAsync(hash);
+        if (dbToken == null)
+            return ServiceResult<Unit>.Fail("invalid_or_expired_token");
+
+        var now = DateTime.UtcNow;
+
+        await _authRepository.VerifyEmailAndConsumeTokenAsync(dbToken, now);
+
+        return ServiceResult<Unit>.Ok(Unit.Value);
     }
 }

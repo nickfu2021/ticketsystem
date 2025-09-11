@@ -103,5 +103,21 @@ namespace TicketSystemApi.Controllers
             }
             return Ok();
         }
+
+        [HttpGet("verify-email")]
+        [ProducesResponseType(typeof(ServiceResult<Unit>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ServiceResult<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ServiceResult<object>), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> VerifyEmail([FromQuery] string token)
+        {
+            var result = await _service.VerifyAsync(token);
+            // 缺 token → 400，其餘失敗（過期/無效）→ 401
+            var okStatus = StatusCodes.Status200OK;
+            if (!result.Success && result.ErrorMessage == "missing_token")
+                return this.ToHttpResult(result, StatusCodes.Status400BadRequest);
+
+            return this.ToHttpResult(result, okStatus);
+        }
+
     }
 }

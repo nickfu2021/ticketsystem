@@ -1,11 +1,15 @@
 -- 查資料庫使用者
 SELECT usename FROM pg_user;
 
+SELECT * FROM user_tokens;
+
+-- DELETE FROM user_tokens;
+
 SELECT * FROM refresh_tokens;
 
 SELECT * FROM users;
 
--- DELETE FROM users WHERE user_uuid='c00db6af-3a61-44c5-81fd-30ee0dfb64c0';
+-- DELETE FROM users WHERE user_uuid='501632eb-e25c-4afb-a619-a8a16c6af7c4';
 
 -- 刪除資料並重置 PRIMARY KEY
 -- TRUNCATE TABLE users RESTART IDENTITY;
