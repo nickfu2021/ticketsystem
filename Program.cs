@@ -20,7 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ----- 設定 & DI -----
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Email:Smtp"));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
 
 builder.Services.AddScoped<ITokenService, TokenService>();

@@ -12,6 +12,34 @@ namespace TicketSystemApi.Controllers
     {
         private readonly IAuthService _service = service;
 
+        [HttpPost("register")]
+        [ProducesResponseType(typeof(ServiceResult<Unit>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ServiceResult<object>), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+        {
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var ua = Request.Headers.UserAgent.ToString();
+
+            var result = await _service.RegisterAsync(dto, ip, ua);
+            // 註冊成功用 201 Created（ToHttpResult 第二參數指定成功狀態碼）
+            return this.ToHttpResult(result, StatusCodes.Status201Created);
+        }
+
+        [HttpGet("verify-email")]
+        [ProducesResponseType(typeof(ServiceResult<Unit>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ServiceResult<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ServiceResult<object>), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> VerifyEmail([FromQuery] string token)
+        {
+            var result = await _service.VerifyAsync(token);
+            // 缺 token → 400，其餘失敗（過期/無效）→ 401
+            var okStatus = StatusCodes.Status200OK;
+            if (!result.Success && result.ErrorMessage == "missing_token")
+                return this.ToHttpResult(result, StatusCodes.Status400BadRequest);
+
+            return this.ToHttpResult(result, okStatus);
+        }
+
         [HttpPost("login")]
         [ProducesResponseType(typeof(ServiceResult<LoginResultDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ServiceResult<object>), StatusCodes.Status401Unauthorized)]
@@ -36,19 +64,6 @@ namespace TicketSystemApi.Controllers
 
             // 統一輸出（成功 200；失敗交由 ToHttpResult 的 Map 決定）
             return this.ToHttpResult(result);
-        }
-
-        [HttpPost("register")]
-        [ProducesResponseType(typeof(ServiceResult<Unit>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ServiceResult<object>), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
-        {
-            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-            var ua = Request.Headers.UserAgent.ToString();
-
-            var result = await _service.RegisterAsync(dto, ip, ua);
-            // 註冊成功用 201 Created（ToHttpResult 第二參數指定成功狀態碼）
-            return this.ToHttpResult(result, StatusCodes.Status201Created);
         }
 
         [HttpPost("refresh")]
@@ -102,21 +117,6 @@ namespace TicketSystemApi.Controllers
                 Response.Cookies.Delete("rt");
             }
             return Ok();
-        }
-
-        [HttpGet("verify-email")]
-        [ProducesResponseType(typeof(ServiceResult<Unit>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ServiceResult<object>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ServiceResult<object>), StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> VerifyEmail([FromQuery] string token)
-        {
-            var result = await _service.VerifyAsync(token);
-            // 缺 token → 400，其餘失敗（過期/無效）→ 401
-            var okStatus = StatusCodes.Status200OK;
-            if (!result.Success && result.ErrorMessage == "missing_token")
-                return this.ToHttpResult(result, StatusCodes.Status400BadRequest);
-
-            return this.ToHttpResult(result, okStatus);
         }
 
     }

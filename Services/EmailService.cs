@@ -9,17 +9,24 @@ namespace TicketSystemApi.Services;
 
 public class EmailService : IEmailService
 {
-    private readonly SmtpSettings _smpt;
+    private readonly EmailSettings _email;
+    private readonly SmtpSettings _smtp;
     private readonly MailAddress _from;
 
-    public EmailService(IOptions<SmtpSettings> smptOptions)
+    public EmailService(IOptions<EmailSettings> emailOptions)
     {
-        _smpt = smptOptions.Value;
+        _email = emailOptions.Value;
 
-        if (string.IsNullOrWhiteSpace(_smpt.From))
+        _smtp = _email.Mode.ToLower() switch
+        {
+            "gmail" => _email.Gmail,
+            _ => _email.Smtp  // 預設 MailHog/Smtp
+        };
+
+        if (string.IsNullOrWhiteSpace(_smtp.From))
             throw new InvalidOperationException("Mail.From 未設定，請在設定檔或環境變數中提供寄件者信箱。");
 
-        _from = new MailAddress(_smpt.From, _smpt.DisplayName ?? string.Empty);
+        _from = new MailAddress(_smtp.From, _smtp.DisplayName ?? string.Empty);
     }
 
     public async Task SendAsync(string to, string subject, string htmlBody)
@@ -27,17 +34,17 @@ public class EmailService : IEmailService
         if (string.IsNullOrWhiteSpace(to))
             throw new ArgumentException("收件者信箱不可為空。", nameof(to));
 
-        using var client = new SmtpClient(_smpt.Host, _smpt.Port)
+        using var client = new SmtpClient(_smtp.Host, _smtp.Port)
         {
-            EnableSsl = _smpt.EnableSsl,
+            EnableSsl = _smtp.EnableSsl,
             DeliveryMethod = SmtpDeliveryMethod.Network,
             UseDefaultCredentials = false
         };
 
-        // MailHog 可不需要帳密
-        if (!string.IsNullOrWhiteSpace(_smpt.Username))
+        // Gmail 需要帳密；MailHog 可以不需要
+        if (!string.IsNullOrWhiteSpace(_smtp.Username))
         {
-            client.Credentials = new NetworkCredential(_smpt.Username, _smpt.Password);
+            client.Credentials = new NetworkCredential(_smtp.Username, _smtp.Password);
         }
 
         using var msg = new MailMessage

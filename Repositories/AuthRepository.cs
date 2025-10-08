@@ -17,6 +17,8 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
     {
         return await _context.Users.FirstOrDefaultAsync(u => u.UserUuid == guid);
     }
+
+    // 建立使用者
     public async Task CreateUserAsync(User user)
     {
         _context.Users.Add(user);
@@ -24,7 +26,7 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
     }
     public async Task<bool> EmailExistsAsync(string email)
     {
-        return await _context.Users.AnyAsync(u => u.Email == email);
+        return await _context.Users.AnyAsync(u => EF.Functions.ILike(u.Email, email));
     }
     public async Task<bool> IdNumberExistsAsync(string idNumber)
     {
@@ -34,7 +36,6 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
     {
         return await _context.Users.AnyAsync(u => u.MobileNumber == mobileNumber);
     }
-    // === Refresh Token 部分 ===
 
     public async Task AddRefreshTokenAsync(RefreshToken token)
     {
@@ -64,6 +65,7 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
         await _context.SaveChangesAsync();
     }
 
+    // 建立驗證 email token
     public async Task AddEmailVerificationTokenAsync(UserToken token)
     {
         // 可選：先撤銷舊的同類型未使用 token（確保唯一）
@@ -84,6 +86,7 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
         await _context.SaveChangesAsync();
     }
 
+    // email token 是否存在
     public async Task<UserToken?> GetActiveEmailVerifyTokenByHashAsync(byte[] tokenHash)
     {
         return await _context.UserTokens
@@ -96,6 +99,7 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
                 t.ExpiresAt > DateTime.UtcNow);
     }
 
+    // email token 消耗
     public async Task VerifyEmailAndConsumeTokenAsync(UserToken token, DateTime now)
     {
         // 同個 DbContext 下原子提交
