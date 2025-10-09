@@ -1,20 +1,20 @@
-using TicketSystemApi.Data;
+using BandHub.AuthService.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using FluentValidation.AspNetCore;
 using FluentValidation;
-using TicketSystemApi.Repositories;
-using TicketSystemApi.Services;
-using TicketSystemApi.Validators;
-using TicketSystemApi.Services.Auth;
+using BandHub.AuthService.Repositories;
+using BandHub.AuthService.Services;
+using BandHub.AuthService.Services.Auth;
 using System.Security.Claims;
 using Microsoft.Extensions.Options;
-using TicketSystemApi.Configurations;
-using TicketSystemApi.Common;
+using BandHub.AuthService.Configurations;
+using BandHub.AuthService.Common;
 using Microsoft.AspNetCore.Mvc;
-using TicketSystemApi.Middleware;
+using BandHub.AuthService.Middleware;
+using BandHub.AuthService.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,16 +32,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IPostalRepository, PostalRepository>();
-builder.Services.AddScoped<ILocationRepository, LocationRepository>();
-builder.Services.AddScoped<ILocationService, LocationService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IEventRepository, EventRepository>();
-builder.Services.AddScoped<IEventService, EventService>();
-builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-builder.Services.AddScoped<IOrderService, OrderService>();
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // ----- Auth -----
@@ -92,7 +83,7 @@ builder.Services
 
 builder.Services.AddFluentValidationAutoValidation();
 // 只要挑一個你專案內的 Validator 類別來讓掃描器定位組件即可
-builder.Services.AddValidatorsFromAssemblyContaining<OrderUpdateDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterDtoValidator>();
 
 // ----- Swagger -----
 builder.Services.AddEndpointsApiExplorer();

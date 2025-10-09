@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using TicketSystemApi.Models;
+using BandHub.AuthService.Models;
 
-namespace TicketSystemApi.Data;
+namespace BandHub.AuthService.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> option) : DbContext(option)
 {
@@ -10,10 +10,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> option) : DbContext(opt
     // 沒有 set;，所以你不能在程式裡手動指定 Users = ...，但 EF Core 在初始化時會自己處理。
     // 這種寫法簡潔，常見於 code-first 新專案。
     public DbSet<User> Users => Set<User>();
-    public DbSet<Event> Events => Set<Event>();
-    public DbSet<Customer> Customers => Set<Customer>();
-    public DbSet<Order> Orders => Set<Order>();
-    public DbSet<Group> Groups => Set<Group>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     // 傳統屬性寫法
     // 有 get; set; → EF Core 在啟動時會自動注入 DbSet<T> 實例。

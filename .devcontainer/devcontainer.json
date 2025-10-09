@@ -1,9 +1,9 @@
 {
     "name": "ASP.NET Core + PostgreSQL Dev Container",
     "dockerComposeFile": ["../docker-compose.yml"],
-    "service": "ticketsystemapi",
+    "service": "BandHub.AuthService",
     "workspaceFolder": "/workspace",
-    "runServices": ["ticketsystemapi", "db"],
+    "runServices": ["BandHub.AuthService", "db"],
     "customizations": {
     "vscode": {
       "settings": {

@@ -1,4 +1,4 @@
-# 🎟️ TicketSystemApi
+# 🎟️ BandHub.AuthService
 
 一個使用 ASP.NET Core 開發的售票系統後端 API，支援使用者註冊、活動管理、訂單處理等功能，搭配 PostgreSQL 資料庫，並支援 Docker 化部署與本機容器化開發環境。
 
@@ -7,7 +7,7 @@
 ## 📁 專案目錄結構
 
 ```
-TicketSystemApi/
+BandHub.AuthService/
 │
 ├── .devcontainer/           # VS Code Dev Container 設定
 ├── Common/                  # 共用參數、常數、擴充工具等
@@ -28,9 +28,9 @@ TicketSystemApi/
 ├── docker-compose.yml       # 多容器部署設定
 ├── Dockerfile               # API Docker 建置設定
 ├── Program.cs               # 應用程式進入點
-├── TicketSystemApi.csproj
-├── TicketSystemApi.http     # API 測試用 (REST Client)
-└── TicketSystemApi.sln
+├── BandHub.AuthService.csproj
+├── BandHub.AuthService.http     # API 測試用 (REST Client)
+└── BandHub.AuthService.sln
 ```
 
 ---
@@ -79,8 +79,8 @@ http://localhost:5000/swagger
 ## 🐘 資料庫說明
 
 - 使用 PostgreSQL
-- 預設資料庫名稱：`concert_test`
-- 備份檔位於 `document/concert_test_backup.sql`
+- 預設資料庫名稱：`TBHDB`
+- 備份檔位於 `document/TBHDB.sql`
 - 可透過 docker-compose 啟動資料庫：
 ```bash
 docker-compose up -d
@@ -90,7 +90,7 @@ docker-compose up -d
 
 ## 📡 API 測試
 
-- 使用內建的 `TicketSystemApi.http` 檔，可用 VS Code REST Client 測試 API。
+- 使用內建的 `BandHub.AuthService.http` 檔，可用 VS Code REST Client 測試 API。
 - 或透過 Swagger UI 測試：
 
 ```
@@ -111,7 +111,7 @@ docker run -p 5000:80 ticketsystem-api
 ## 📄 文件與筆記
 
 - `document/開發筆記.txt`：紀錄開發流程、遇到的問題與修正紀錄
-- `concert_test_backup.sql`：PostgreSQL 資料匯出備份
+- `TBHDB.sql`：PostgreSQL 資料匯出備份
 - `2025-06-25-[PostgreSQL]資料庫備份輸出...`：資料快照說明檔案
 
 ---

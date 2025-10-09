@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using TicketSystemApi.ApiSupport;       // 內含 this.ToHttpResult(...) 擴充方法
-using TicketSystemApi.Common;          // ServiceResult<T>
-using TicketSystemApi.Dtos;            // LoginResultDto / TokenDto
-using TicketSystemApi.Services.Auth;
+using BandHub.AuthService.ApiSupport;       // 內含 this.ToHttpResult(...) 擴充方法
+using BandHub.AuthService.Common;          // ServiceResult<T>
+using BandHub.AuthService.Dtos;            // LoginResultDto / TokenDto
+using BandHub.AuthService.Services.Auth;
 
-namespace TicketSystemApi.Controllers
+namespace BandHub.AuthService.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -78,19 +78,14 @@ namespace TicketSystemApi.Controllers
             var rtPlain = Request.Cookies["rt"];
             if (string.IsNullOrWhiteSpace(rtPlain))
             {
-                // 缺少 RT → 401 + 統一包裝
-                return Unauthorized(ServiceResult<TokenDto>.Fail("未授權")); // 或 "missing_refresh_token"
+                return this.ToHttpResult(ServiceResult<TokenDto>.Fail("missing_refresh_token"), StatusCodes.Status401Unauthorized);
             }
 
             // 2) 呼叫服務
             var (result, newRtPlain) = await _service.RefreshAsync(rtPlain, ip, ua);
 
-            // 3) 若失敗，直接 401（避免 MapStatusCode 把某些訊息判成 400）
-            if (!result.Success)
-                return Unauthorized(result);
-
-            // 4) 成功則旋轉新 RT Cookie（如有）
-            if (!string.IsNullOrWhiteSpace(newRtPlain))
+            // 3) 設定新 RT Cookie（僅成功時）
+            if (result.Success && !string.IsNullOrWhiteSpace(newRtPlain))
             {
                 Response.Cookies.Append("rt", newRtPlain, new CookieOptions
                 {
@@ -101,8 +96,8 @@ namespace TicketSystemApi.Controllers
                 });
             }
 
-            // 5) 成功回 200 帶 accessToken/expiresIn
-            return Ok(result);
+            // 4) 使用 ToHttpResult 統一輸出
+            return this.ToHttpResult(result);
         }
 
         [HttpPost("logout")]

@@ -1,17 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
-using TicketSystemApi.Common;
+using BandHub.AuthService.Common;
 
-namespace TicketSystemApi.ApiSupport;
+namespace BandHub.AuthService.ApiSupport;
 
 public static class ServiceResultHttpExtensions
 {
     /// <summary>
     /// 將 ServiceResult<T> 轉成 IActionResult，統一狀態碼與輸出格式
     /// </summary>
-    public static IActionResult ToHttpResult<T>(
-        this ControllerBase c,
-        ServiceResult<T> result,
-        int successStatusCode = StatusCodes.Status200OK)
+    public static IActionResult ToHttpResult<T>(this ControllerBase c, ServiceResult<T> result, int successStatusCode = StatusCodes.Status200OK)
     {
         if (result.Success)
         {

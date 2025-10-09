@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
-using TicketSystemApi.Common;
-using TicketSystemApi.Configurations;
-using TicketSystemApi.Utils;
+using BandHub.AuthService.Common;
+using BandHub.AuthService.Configurations;
+using BandHub.AuthService.Utils;
 
-namespace TicketSystemApi.Services;
+namespace BandHub.AuthService.Services;
 
 public class EmailService : IEmailService
 {

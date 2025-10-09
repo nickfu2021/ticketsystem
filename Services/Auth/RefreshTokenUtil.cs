@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace TicketSystemApi.Services.Auth;
+namespace BandHub.AuthService.Services.Auth;
 
 public static class RefreshTokenUtil
 {

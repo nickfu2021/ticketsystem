@@ -1,6 +1,6 @@
-using TicketSystemApi.Common;
+using BandHub.AuthService.Common;
 
-namespace TicketSystemApi.Services;
+namespace BandHub.AuthService.Services;
 
 public interface IEmailService
 {

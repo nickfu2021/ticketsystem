@@ -1,4 +1,4 @@
-namespace TicketSystemApi.Common;
+namespace BandHub.AuthService.Common;
 
 public sealed class Unit
 {

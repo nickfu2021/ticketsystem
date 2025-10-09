@@ -1,13 +1,13 @@
 using System.Text;
 using Microsoft.Extensions.Options;
-using TicketSystemApi.Common;
-using TicketSystemApi.Configurations;
-using TicketSystemApi.Dtos;
-using TicketSystemApi.Models;
-using TicketSystemApi.Repositories;
-using TicketSystemApi.Utils;
+using BandHub.AuthService.Common;
+using BandHub.AuthService.Configurations;
+using BandHub.AuthService.Dtos;
+using BandHub.AuthService.Models;
+using BandHub.AuthService.Repositories;
+using BandHub.AuthService.Utils;
 
-namespace TicketSystemApi.Services.Auth;
+namespace BandHub.AuthService.Services.Auth;
 
 // 這支不需要 IMapper，移除依賴避免 DI 錯誤
 public class AuthService(
@@ -69,7 +69,8 @@ public class AuthService(
             Birthday = string.IsNullOrWhiteSpace(dto.Birthday) ? null : dto.Birthday,
             MobileNumber = dto.MobileNumber,
             PostalCode = string.IsNullOrWhiteSpace(dto.PostalCode) ? null : dto.PostalCode,
-            Address = string.IsNullOrWhiteSpace(dto.Address) ? null : dto.Address,
+            Address = BuildFullAddress(dto.City, dto.District, dto.Address),
+
             IsActive = false,
             IsLocked = false,
             CreatedAt = now,
@@ -98,6 +99,7 @@ public class AuthService(
 
         await _authRepository.CreateUserAsync(user);
         await _authRepository.AddEmailVerificationTokenAsync(userToken);
+        await _authRepository.SaveChangesAsync();
 
         // 寄信（你目前公司網路擋 SMTP，先保留）
 
@@ -125,13 +127,15 @@ public class AuthService(
 
         return ServiceResult<Unit>.Ok(Unit.Value);
     }
-    
+
     // 登入
     public async Task<(ServiceResult<LoginResultDto> Result, string? RefreshToken)> LoginAsync(string email, string password, string ip, string userAgent)
     {
         var user = await _authRepository.GetUserByEmailAsync(email);
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             return (ServiceResult<LoginResultDto>.Fail("帳號或密碼錯誤"), null);
+
+        user.LastLoginAt = DateTime.UtcNow;
 
         var accessToken = _tokenService.CreateToken(user.UserUuid.ToString());
 
@@ -160,7 +164,7 @@ public class AuthService(
         };
 
         return (ServiceResult<LoginResultDto>.Ok(dto), rtPlain);
-    }    
+    }
 
     // 刷新 token
     public async Task<(ServiceResult<TokenDto> Result, string? NewRtPlain)> RefreshAsync(string refreshTokenPlain, string? ip = null, string? userAgent = null)
@@ -249,6 +253,7 @@ public class AuthService(
         return (ServiceResult<TokenDto>.Ok(dto), newRtPlain);
     }
 
+    // 登出
     public async Task<bool> LogoutAsync(string refreshTokenPlain, string? ip = null)
     {
         var hash = RefreshTokenUtil.Hash(refreshTokenPlain, _jwt.RefreshTokenPepper);
@@ -260,5 +265,20 @@ public class AuthService(
         return true;
     }
 
+    // 合併地址
+    private static string? BuildFullAddress(string? city, string? district, string? address)
+    {
+        // 三者都空時，直接回傳 null
+        if (string.IsNullOrWhiteSpace(city) &&
+            string.IsNullOrWhiteSpace(district) &&
+            string.IsNullOrWhiteSpace(address))
+            return null;
+
+        // 避免中間有多餘空白或 null
+        var parts = new[] { city, district, address }
+            .Where(s => !string.IsNullOrWhiteSpace(s));
+
+        return string.Concat(parts);
+    }
 
 }

@@ -1,4 +1,4 @@
-namespace TicketSystemApi.Common;
+namespace BandHub.AuthService.Common;
 
 // 統一格式 : 所有 API 都有 success、errorMessage、data
 // 型別安全 : 有回傳型別 T，編譯時期即檢查正確性

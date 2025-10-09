@@ -50,183 +50,6 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: customers; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.customers (
-    id integer NOT NULL,
-    name text NOT NULL,
-    email text NOT NULL
-);
-
-
-ALTER TABLE public.customers OWNER TO postgres;
-
---
--- Name: customers_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.customers_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.customers_id_seq OWNER TO postgres;
-
---
--- Name: customers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.customers_id_seq OWNED BY public.customers.id;
-
-
---
--- Name: events; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.events (
-    id integer NOT NULL,
-    name text NOT NULL,
-    location text NOT NULL,
-    event_date date NOT NULL,
-    total_tickets integer NOT NULL,
-    price numeric(10,2) NOT NULL
-);
-
-
-ALTER TABLE public.events OWNER TO postgres;
-
---
--- Name: orders; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.orders (
-    id integer NOT NULL,
-    customer_id integer,
-    event_id integer,
-    quantity integer NOT NULL,
-    order_time timestamp with time zone DEFAULT now()
-);
-
-
-ALTER TABLE public.orders OWNER TO postgres;
-
---
--- Name: customers_order; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW public.customers_order AS
- SELECT c.name AS "客戶名稱",
-    e.name AS "演唱會名稱",
-    o.quantity AS "張數",
-    (e.price * (o.quantity)::numeric) AS "總金額"
-   FROM ((public.orders o
-     JOIN public.events e ON ((e.id = o.event_id)))
-     JOIN public.customers c ON ((c.id = o.customer_id)));
-
-
-ALTER VIEW public.customers_order OWNER TO postgres;
-
---
--- Name: events_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.events_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.events_id_seq OWNER TO postgres;
-
---
--- Name: events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.events_id_seq OWNED BY public.events.id;
-
-
---
--- Name: group_programs; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.group_programs (
-    gp_uuid uuid NOT NULL,
-    group_code character(4) NOT NULL,
-    program_code character varying(50) NOT NULL,
-    can_view boolean NOT NULL,
-    can_create boolean NOT NULL,
-    can_update boolean NOT NULL,
-    can_delete boolean NOT NULL,
-    can_export boolean NOT NULL,
-    group_programs_1 boolean NOT NULL,
-    group_programs_2 boolean NOT NULL,
-    group_programs_3 boolean NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
-);
-
-
-ALTER TABLE public.group_programs OWNER TO postgres;
-
---
--- Name: groups; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.groups (
-    group_uuid uuid NOT NULL,
-    code character(4) NOT NULL,
-    description text NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
-);
-
-
-ALTER TABLE public.groups OWNER TO postgres;
-
---
--- Name: orders_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.orders_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.orders_id_seq OWNER TO postgres;
-
---
--- Name: orders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.orders_id_seq OWNED BY public.orders.id;
-
-
---
--- Name: popular_events; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW public.popular_events AS
-SELECT
-    NULL::text AS name,
-    NULL::bigint AS "訂單數",
-    NULL::bigint AS "總售出";
-
-
-ALTER VIEW public.popular_events OWNER TO postgres;
-
---
 -- Name: postal; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -264,23 +87,6 @@ ALTER SEQUENCE public.postal_id_seq OWNED BY public.postal.id;
 
 
 --
--- Name: programs; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.programs (
-    pg_uuid uuid NOT NULL,
-    code character varying(50) NOT NULL,
-    name character varying(100) NOT NULL,
-    path character varying(200) NOT NULL,
-    description text NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
-);
-
-
-ALTER TABLE public.programs OWNER TO postgres;
-
---
 -- Name: refresh_tokens; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -302,21 +108,6 @@ CREATE TABLE public.refresh_tokens (
 
 
 ALTER TABLE public.refresh_tokens OWNER TO postgres;
-
---
--- Name: user_groups; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.user_groups (
-    ug_uuid uuid NOT NULL,
-    user_uuid uuid NOT NULL,
-    group_code character(4) NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
-);
-
-
-ALTER TABLE public.user_groups OWNER TO postgres;
 
 --
 -- Name: user_tokens; Type: TABLE; Schema: public; Owner: postgres
@@ -367,91 +158,10 @@ CREATE TABLE public.users (
 ALTER TABLE public.users OWNER TO postgres;
 
 --
--- Name: customers id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.customers ALTER COLUMN id SET DEFAULT nextval('public.customers_id_seq'::regclass);
-
-
---
--- Name: events id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.events ALTER COLUMN id SET DEFAULT nextval('public.events_id_seq'::regclass);
-
-
---
--- Name: orders id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.orders_id_seq'::regclass);
-
-
---
 -- Name: postal id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.postal ALTER COLUMN id SET DEFAULT nextval('public.postal_id_seq'::regclass);
-
-
---
--- Data for Name: customers; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.customers (id, name, email) FROM stdin;
-9	Karoyo	karoyo@example.com
-10	檸檬	lemon@example.com
-5	中川	river01@example.com
-11	suis	suis@example.com
-1	n-buna	n-buna@example.com
-2	Ryo	Ryo@example.com
-\.
-
-
---
--- Data for Name: events; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.events (id, name, location, event_date, total_tickets, price) FROM stdin;
-2	周杰倫演唱會	台北大巨蛋	2025-12-31	10000	6400.00
-3	伍佰演唱會	高雄巨蛋	2025-08-30	20000	1600.00
-6	美波演唱會	新北市工商展覽中心	2025-09-14	1500	3200.00
-7	yorushika前世演唱會	台中威秀影城	2025-07-06	100	880.00
-8	ONE OK ROCK 演唱會	高雄巨蛋	2025-12-25	30000	6600.00
-1	Aimer 演唱會	林口體育館	2025-09-06	15000	1600.00
-15	宇多田光	台北小巨蛋	2025-09-01	500	1800.00
-\.
-
-
---
--- Data for Name: group_programs; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.group_programs (gp_uuid, group_code, program_code, can_view, can_create, can_update, can_delete, can_export, group_programs_1, group_programs_2, group_programs_3, created_at, updated_at) FROM stdin;
-\.
-
-
---
--- Data for Name: groups; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.groups (group_uuid, code, description, created_at, updated_at) FROM stdin;
-\.
-
-
---
--- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.orders (id, customer_id, event_id, quantity, order_time) FROM stdin;
-2	2	2	3	2025-06-24 11:40:10.790283+08
-3	1	2	1	2025-06-24 11:40:14.189284+08
-1	1	1	5	2025-06-24 11:08:52.996392+08
-10	9	7	5	2025-07-08 10:01:58.066551+08
-11	5	3	3	2025-07-08 11:57:22.808373+08
-17	10	8	3	2025-07-11 12:27:50.389513+08
-18	11	7	2	2025-08-01 09:03:06.417636+08
-\.
 
 
 --
@@ -34256,14 +33966,6 @@ COPY public.postal (id, zip_code, city, district, road) FROM stdin;
 
 
 --
--- Data for Name: programs; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.programs (pg_uuid, code, name, path, description, created_at, updated_at) FROM stdin;
-\.
-
-
---
 -- Data for Name: refresh_tokens; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -34283,14 +33985,28 @@ COPY public.refresh_tokens (rt_uuid, user_uuid, token_hash, created_at, created_
 01992c20-da25-7e13-b52d-79f9ae794b6c	bdc6e594-85d9-454c-ae76-5c2164059843	09c12712aae223d9a74e178862dbb1107875c41f64c37eaa57e4130d478b25a3	2025-09-09 09:39:34.556272+08	::1	PostmanRuntime/7.45.0	2025-09-23 09:39:34.556356+08	\N	\N	\N	\N	\N	f
 01993274-d221-7d54-b528-4702e2b9e773	bdc6e594-85d9-454c-ae76-5c2164059843	4cf2268e8d6b991a3cc7a504574c549b0fe243c611bb51a762465cf45705d6a5	2025-09-10 15:09:00.829609+08	::1	PostmanRuntime/7.46.0	2025-09-24 15:09:00.829683+08	\N	\N	\N	\N	\N	t
 0199327c-5eb6-7bbc-95c6-34ffc775b104	bdc6e594-85d9-454c-ae76-5c2164059843	9d273209af507814193013bd1b66f9be1bd8cdd54e60485f5a0f11094d54a4fa	2025-09-10 15:17:15.573323+08	::1	PostmanRuntime/7.46.0	2025-09-24 15:17:15.573324+08	\N	\N	\N	\N	\N	t
-\.
-
-
---
--- Data for Name: user_groups; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.user_groups (ug_uuid, user_uuid, group_code, created_at, updated_at) FROM stdin;
+0199c2ee-5b4c-7b8d-a48b-0ad676e360c2	bdc6e594-85d9-454c-ae76-5c2164059843	9e9bf800e674e468a54c317c68660b8ada0225311650e9ce7cc48787bd236ee2	2025-10-08 16:27:04.895818+08	::1	PostmanRuntime/7.46.0	2025-10-22 16:27:04.896193+08	\N	\N	\N	\N	\N	t
+0199c691-70ba-74bb-b392-88f8b5a18713	ea7a39ad-2d66-4685-b3a9-1444f0132de9	8a40c92eda3617503b9249d3134207ae43761f9a59cbe38dbc64f9f6a1600af9	2025-10-09 09:24:04.384876+08	::1	PostmanRuntime/7.46.0	2025-10-23 09:24:04.385015+08	\N	\N	\N	\N	\N	t
+0199c694-ffbc-79c4-a58d-77999c3c4a6a	ea7a39ad-2d66-4685-b3a9-1444f0132de9	294702eb8cd89e61fbcdc2cc1a2c613987b653028bbf7461a6ce414f48bd6b10	2025-10-09 09:27:57.605071+08	::1	PostmanRuntime/7.46.0	2025-10-23 09:27:57.605221+08	\N	\N	\N	\N	\N	t
+0199c6a5-1964-7b05-b125-d26ef5007cd5	ea7a39ad-2d66-4685-b3a9-1444f0132de9	b7fde867cc9d43dc8a8d45975bebf8f3e492127e938bc780873b3b7e611d7c1c	2025-10-09 09:45:32.757695+08	::1	PostmanRuntime/7.46.0	2025-10-23 09:45:32.757821+08	\N	\N	\N	\N	\N	t
+0199c6a9-5dac-72b9-b3c0-8aaa99d85f8b	bdc6e594-85d9-454c-ae76-5c2164059843	3acb8f4bf50ce1450d5d97464b2b97d2dcdd5f4688557f6ef82ef3055d27540c	2025-10-09 09:50:12.365001+08	::1	PostmanRuntime/7.46.0	2025-10-23 09:50:12.365273+08	\N	\N	\N	\N	\N	t
+0199c6ac-2b31-7e5a-b070-3368cfa9f12c	9b6dd4c3-7fce-433e-8364-ff47c3d34ca2	809802f9f67d0d2e4ab315841e8aa7aa3dc7ea3e38c2b6ea7f01cf36ab7415f5	2025-10-09 09:53:16.080842+08	::1	PostmanRuntime/7.46.0	2025-10-23 09:53:16.080842+08	2025-10-09 09:54:09.665067+08	04de81232dd14251308922ac9603b425434b12971efdf2bf0efcd323c1cb47bc	rotation	2025-10-09 09:54:09.604816+08	::1	t
+0199c6ac-fc81-7bc3-abe8-d885f6cbaaaa	9b6dd4c3-7fce-433e-8364-ff47c3d34ca2	04de81232dd14251308922ac9603b425434b12971efdf2bf0efcd323c1cb47bc	2025-10-09 09:54:09.664825+08	::1	PostmanRuntime/7.46.0	2025-10-23 09:54:09.664826+08	\N	\N	\N	\N	\N	t
+0199c711-3278-7cd5-b99a-6be722ac4f61	295a1185-4834-496f-ac7c-1f360195b1dd	89df1fcfdb3814110a16e2e09ee2e3000285f0c0b7850b2efe8948c2e541fee5	2025-10-09 11:43:37.076797+08	::1	PostmanRuntime/7.46.0	2025-10-23 11:43:37.076996+08	2025-10-09 11:45:40.525672+08	535c441ab6e6f72f4094a41b475eb8bb6b3f1c6ab84ceae0ea52a7aada9abef3	rotation	2025-10-09 11:45:40.472125+08	::1	f
+0199c713-14ba-7ffa-8e1a-c0d1452f9771	295a1185-4834-496f-ac7c-1f360195b1dd	535c441ab6e6f72f4094a41b475eb8bb6b3f1c6ab84ceae0ea52a7aada9abef3	2025-10-09 11:45:40.525401+08	::1	PostmanRuntime/7.46.0	2025-10-23 11:45:40.525401+08	2025-10-09 11:59:24.261942+08	\N	logout	\N	\N	f
+0199c728-cdaf-7de8-b4c9-fbfc636744a3	295a1185-4834-496f-ac7c-1f360195b1dd	ead850edb31dd8871c4fca8a4e72e9e4b1e4515edce4f743c67266c87f596b5e	2025-10-09 12:09:24.142992+08	::1	PostmanRuntime/7.46.0	2025-10-23 12:09:24.142993+08	2025-10-09 12:09:42.696227+08	16c237f28af3d0d57ae964d3b6dab56c684237fc6a7a8993aa631b38f8cbf692	rotation	2025-10-09 12:09:42.647638+08	::1	f
+0199c729-1628-7909-8de4-afd92268736a	295a1185-4834-496f-ac7c-1f360195b1dd	16c237f28af3d0d57ae964d3b6dab56c684237fc6a7a8993aa631b38f8cbf692	2025-10-09 12:09:42.696218+08	::1	PostmanRuntime/7.46.0	2025-10-23 12:09:42.696219+08	2025-10-09 12:10:02.923226+08	\N	logout	\N	\N	f
+0199c72a-09a4-735b-ba68-474cb9d1cb99	295a1185-4834-496f-ac7c-1f360195b1dd	408fcbacac6a3a8d3ff7029170bd0dbe5b76f1805aa52be8e29563c05442c816	2025-10-09 12:10:45.028075+08	::1	PostmanRuntime/7.46.0	2025-10-23 12:10:45.028075+08	\N	\N	\N	\N	\N	t
+0199c72c-db8f-7202-812f-403dcabcf7f1	295a1185-4834-496f-ac7c-1f360195b1dd	01c4244ead5f8be90867663dd44e1c2552e5da3ef61c66645eb711c670604b09	2025-10-09 12:13:49.83897+08	::1	PostmanRuntime/7.46.0	2025-10-23 12:13:49.83897+08	2025-10-09 12:14:14.720751+08	\N	logout	\N	\N	f
+0199c734-d9cc-77a8-bfd8-b041071488b2	295a1185-4834-496f-ac7c-1f360195b1dd	234a34c82183027e661e24f53107f5328048f2d5648fd8f042cf57821aabd233	2025-10-09 12:22:33.657669+08	::1	PostmanRuntime/7.46.0	2025-10-23 12:22:33.657858+08	2025-10-09 13:31:55.789739+08	\N	logout	\N	\N	f
+0199c777-067b-741f-8885-fce0ddd0d59d	295a1185-4834-496f-ac7c-1f360195b1dd	b44e08b92ac54c6dd78b14ef1a5ac447782d5ad6ddb47e55a7e4a36c0e0e317e	2025-10-09 13:34:50.490659+08	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36	2025-10-23 13:34:50.490659+08	2025-10-09 13:36:06.420754+08	b7ed1d1e6a88665aeda55cc087e3d5783459fb5e1867a387dba6a496319edbe8	rotation	2025-10-09 13:36:06.334384+08	::1	f
+0199c778-2f15-7275-8499-bf2046a62af9	295a1185-4834-496f-ac7c-1f360195b1dd	b7ed1d1e6a88665aeda55cc087e3d5783459fb5e1867a387dba6a496319edbe8	2025-10-09 13:36:06.420359+08	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36	2025-10-23 13:36:06.420363+08	2025-10-09 13:36:58.005985+08	\N	logout	\N	\N	f
+0199c78a-8202-7fdf-b7ee-851d52ae2b8d	cb100190-5752-47d3-87c0-0da1bfc00f02	8da3b8db6159702929952090f95341c5054cf0fcce08b3f79c0f5ce285f76b06	2025-10-09 13:56:07.296231+08	::1	PostmanRuntime/7.46.0	2025-10-23 13:56:07.296301+08	2025-10-09 13:57:02.608035+08	d2d5efa4592f09c05dddfed2a1113748d5525754ea4e08bece570a624a633f01	rotation	2025-10-09 13:57:02.554643+08	::1	f
+0199c78b-5ab5-792b-bb7b-a7c0227332fe	cb100190-5752-47d3-87c0-0da1bfc00f02	d2d5efa4592f09c05dddfed2a1113748d5525754ea4e08bece570a624a633f01	2025-10-09 13:57:02.607755+08	::1	PostmanRuntime/7.46.0	2025-10-23 13:57:02.607755+08	2025-10-09 13:57:46.360242+08	\N	logout	\N	\N	f
+0199c7c0-8309-7c90-83c3-a68df3f907cb	2e140e62-ff09-43ae-bd8b-0d78a784934b	2eeed24bc04be1389b32ecfe1e6d120f6a7f9a2e5220dd1774799968ed472842	2025-10-09 14:55:06.502946+08	::1	PostmanRuntime/7.46.0	2025-10-23 14:55:06.503071+08	2025-10-09 14:55:44.566402+08	82a3c0b3dcfd70f3516b5ac34c877008f721063e1e9f98ebca27dfcc2d42e07a	rotation	2025-10-09 14:55:44.512346+08	::1	f
+0199c7c1-17b7-748f-8eae-17d92c47856a	2e140e62-ff09-43ae-bd8b-0d78a784934b	82a3c0b3dcfd70f3516b5ac34c877008f721063e1e9f98ebca27dfcc2d42e07a	2025-10-09 14:55:44.566069+08	::1	PostmanRuntime/7.46.0	2025-10-23 14:55:44.56607+08	2025-10-09 14:56:33.283139+08	\N	logout	\N	\N	f
+0199c7f8-d94b-7eb5-826f-b4e71ddd1c32	a9a2170f-2a62-47b2-81f3-ed8d9a22d11f	43e400a9cec86d0f1ef9bdc3dcdad77f0992347c46f48524089f7f350672993e	2025-10-09 15:56:38.587102+08	::1	PostmanRuntime/7.46.0	2025-10-23 15:56:38.587176+08	2025-10-09 15:57:35.753315+08	d6b28dddc9e362738d676fb5c1bdac57bbe32e0757235026b86f6e81f6efb352	rotation	2025-10-09 15:57:35.671242+08	::1	f
+0199c7f9-b88a-7a7b-be8d-ec553ef4cb85	a9a2170f-2a62-47b2-81f3-ed8d9a22d11f	d6b28dddc9e362738d676fb5c1bdac57bbe32e0757235026b86f6e81f6efb352	2025-10-09 15:57:35.753097+08	::1	PostmanRuntime/7.46.0	2025-10-23 15:57:35.753097+08	2025-10-09 15:58:01.194636+08	\N	logout	\N	\N	f
 \.
 
 
@@ -34301,6 +34017,14 @@ COPY public.user_groups (ug_uuid, user_uuid, group_code, created_at, updated_at)
 COPY public.user_tokens (token_uuid, user_uuid, purpose, token_hash, sent_to, new_email, created_at, expires_at, consumed_at, revoked_at, ip_created, ua_created, meta) FROM stdin;
 da690a37-2ffc-4203-b895-2f5aac746c30	1e3564fd-69ba-43d6-9897-b5a623bddd1c	email_verify	\\x68531ad3e32eb8467b6a2d5606112dae0113022231decdb811b3f24652c34e55	\N	\N	2025-09-11 14:59:33.39315+08	2025-09-12 14:59:33.39315+08	\N	\N	::1	PostmanRuntime/7.46.0	{}
 3db58fd9-15c8-4c3c-b5a9-afed410e66f3	3aa6e045-7c1c-4d07-89aa-8b2db242365f	email_verify	\\x5fb683cbba3efb7f509ef2d14bc43134cfdabd544d2fd5484956661a7a0e0b29	\N	\N	2025-09-11 15:01:44.371787+08	2025-09-12 15:01:44.371787+08	\N	\N	::1	PostmanRuntime/7.46.0	{}
+72a37fe9-1993-4ac9-bff3-96bafbb9ae70	ea7a39ad-2d66-4685-b3a9-1444f0132de9	email_verify	\\xc3372a812c30412be4375b33d003367730f46b7dd1a36ad95778c8ff824bde7c	\N	\N	2025-10-08 13:50:17.303851+08	2025-10-08 15:50:17.303851+08	2025-10-08 14:11:53.956537+08	\N	::1	PostmanRuntime/7.46.0	{}
+9674bc87-5863-4d28-95d9-129a347ead8b	9b6dd4c3-7fce-433e-8364-ff47c3d34ca2	email_verify	\\x51f2e647868ad1559667067e7b5714e17414440135a9cf617c611ddf39f92620	\N	\N	2025-10-09 09:52:20.299978+08	2025-10-09 11:52:20.299978+08	2025-10-09 09:52:39.747536+08	\N	::1	PostmanRuntime/7.46.0	{}
+2e831951-910f-400e-b500-1a0481bd911c	b2a5e199-1242-4535-82e5-2fcd665e214f	email_verify	\\x1074bd572760a9924f8bf67f5836de7dc86ecf53bea9e93a6592efff3ebb2c35	\N	\N	2025-10-09 11:10:44.771395+08	2025-10-09 13:10:44.771395+08	\N	\N	::1	PostmanRuntime/7.46.0	{}
+d2f607ea-27ec-460e-8274-1b2ef9504851	295a1185-4834-496f-ac7c-1f360195b1dd	email_verify	\\x1d17c5c73427ed852a1102543ece8d5ada30609170836c0ffd47679a5172d679	\N	\N	2025-10-09 11:40:42.915992+08	2025-10-09 13:40:42.915992+08	2025-10-09 11:41:59.957089+08	\N	::1	PostmanRuntime/7.46.0	{}
+195fe407-1014-483c-9bec-4ecd4085dff2	cb100190-5752-47d3-87c0-0da1bfc00f02	email_verify	\\x1e92a9c3820fd016637f002498554c5f735f6b1cb448a37ddcab3ef60528d607	\N	\N	2025-10-09 13:54:47.144311+08	2025-10-09 15:54:47.144311+08	2025-10-09 13:55:16.086079+08	\N	::1	PostmanRuntime/7.46.0	{}
+245e0980-469e-4905-9d71-4faf66412147	2e140e62-ff09-43ae-bd8b-0d78a784934b	email_verify	\\x52c85fb6915a7dd857f38214b7cb820d9ac31c6101e90c727504cc0e64dd257d	\N	\N	2025-10-09 14:54:11.711919+08	2025-10-09 16:54:11.711919+08	2025-10-09 14:54:40.005424+08	\N	::1	PostmanRuntime/7.46.0	{}
+6f420d7b-705b-4252-a940-e5b63649debf	a9a2170f-2a62-47b2-81f3-ed8d9a22d11f	email_verify	\\x56cf590c1b05eb3269fd8c45726232f1c418612be78b0f991935c4aaea326cbf	\N	\N	2025-10-09 15:55:52.755981+08	2025-10-09 17:55:52.755981+08	2025-10-09 15:56:14.246642+08	\N	::1	PostmanRuntime/7.46.0	{}
+e0c9f9f5-61cd-4bec-8515-bedc70e4a7bc	8a65ba55-f0a8-41b6-b876-5fd8ccac62eb	email_verify	\\xa422997ecc37c342b40d8aa7cf641e13d32f54b56726389c35810d530233153f	\N	\N	2025-10-09 16:20:27.197906+08	2025-10-09 18:20:27.197906+08	\N	\N	::1	PostmanRuntime/7.46.0	{}
 \.
 
 
@@ -34309,32 +34033,11 @@ da690a37-2ffc-4203-b895-2f5aac746c30	1e3564fd-69ba-43d6-9897-b5a623bddd1c	email_
 --
 
 COPY public.users (user_uuid, email, password_hash, username, id_number, birthday, mobile_number, postal_code, address, is_active, is_locked, created_at, updated_at, last_login_at, email_verified_at) FROM stdin;
-28b9bc16-ad94-4868-b141-bc4596ff7b9c	n-buna@example.com	$2a$11$6CoH9jDcbKq9Bv4aLNCPdutjX613gEYGqDWQ0Uc1AnKcDYhT4SL7u	n-buna	\N	19961223	0955123321	115	臺北市南港區經貿二路135號13樓	f	f	2025-09-08 16:49:50.51161+08	2025-09-08 16:49:50.51161+08	\N	\N
-bdc6e594-85d9-454c-ae76-5c2164059843	suis@example	$2a$11$Q7SwoTHGtQTMYSIT1W0Uj.kp03UTKqhIompxlYT64dt9tqNusXiP.	\N	\N	\N	0958121222	\N	\N	f	f	2025-09-08 16:57:56.812899+08	2025-09-08 16:57:56.812899+08	\N	\N
-1e3564fd-69ba-43d6-9897-b5a623bddd1c	nickfu2021@example	$2a$11$9YkbIKlrdh4gGbTR05TSqu.sG348fWwqX380eoMoH1UVf1ETmyHTe	\N	\N	\N	0955192222	\N	\N	f	f	2025-09-11 14:59:33.39315+08	2025-09-11 14:59:33.39315+08	\N	\N
-3aa6e045-7c1c-4d07-89aa-8b2db242365f	rickfu2021@example	$2a$11$oeUZsEOuBrMNEl6tbBeoH.sF7GOEQKtNCYCjQn4I0CwXi9YOZ6kVe	\N	\N	\N	0942111232	\N	\N	f	f	2025-09-11 15:01:44.371787+08	2025-09-11 15:01:44.371787+08	\N	\N
+ea7a39ad-2d66-4685-b3a9-1444f0132de9	nickfu2021@example	$2a$11$KQY1xsF3qvYjbRj/AfRJIOVyf2BnZ78JxHvRreLGn.LOwYgPwDySO	\N	\N	\N	0955192223	\N	\N	t	f	2025-10-08 13:50:17.303851+08	2025-10-08 13:50:17.303851+08	2025-10-09 09:45:32.379593+08	2025-10-08 14:11:53.956537+08
+9b6dd4c3-7fce-433e-8364-ff47c3d34ca2	suis@example	$2a$11$TxAbwtsP9/ozgXPGnmLyd.s91lCiyDuqDfYCXHzsnpKzRWO3zyjYS	\N	\N	\N	0900000010	\N	\N	t	f	2025-10-09 09:52:20.299978+08	2025-10-09 09:52:20.299978+08	2025-10-09 09:53:16.071168+08	2025-10-09 09:52:39.747536+08
+a9a2170f-2a62-47b2-81f3-ed8d9a22d11f	n-buna@example	$2a$11$EgH5lZMqdlgassQx/5F5Be9XKyb9jd.gcGPTxxotxp07BHry7K/vG	n-buna	A109620474	19940121	0900000020	115	臺北市南港區經貿二路135號10樓	t	f	2025-10-09 15:55:52.755981+08	2025-10-09 15:55:52.755981+08	2025-10-09 15:56:38.364819+08	2025-10-09 15:56:14.246642+08
+8a65ba55-f0a8-41b6-b876-5fd8ccac62eb		$2a$11$/qGMsGa3GjIJw2n.whi5jOulxrIvnojo60iNFWg.MYjYa9un0XwhO	RickFu	H148188967	19960121	0900000040	\N	\N	f	f	2025-10-09 16:20:27.197906+08	2025-10-09 16:20:27.197906+08	\N	\N
 \.
-
-
---
--- Name: customers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.customers_id_seq', 11, true);
-
-
---
--- Name: events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.events_id_seq', 15, true);
-
-
---
--- Name: orders_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.orders_id_seq', 18, true);
 
 
 --
@@ -34345,67 +34048,11 @@ SELECT pg_catalog.setval('public.postal_id_seq', 33793, true);
 
 
 --
--- Name: customers customers_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.customers
-    ADD CONSTRAINT customers_email_key UNIQUE (email);
-
-
---
--- Name: customers customers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.customers
-    ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
-
-
---
--- Name: events events_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.events
-    ADD CONSTRAINT events_pkey PRIMARY KEY (id);
-
-
---
--- Name: group_programs group_programs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.group_programs
-    ADD CONSTRAINT group_programs_pkey PRIMARY KEY (gp_uuid);
-
-
---
--- Name: groups groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.groups
-    ADD CONSTRAINT groups_pkey PRIMARY KEY (group_uuid);
-
-
---
--- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.orders
-    ADD CONSTRAINT orders_pkey PRIMARY KEY (id);
-
-
---
 -- Name: postal postal_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.postal
     ADD CONSTRAINT postal_pkey PRIMARY KEY (id);
-
-
---
--- Name: programs programs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.programs
-    ADD CONSTRAINT programs_pkey PRIMARY KEY (pg_uuid);
 
 
 --
@@ -34422,14 +34069,6 @@ ALTER TABLE ONLY public.refresh_tokens
 
 ALTER TABLE ONLY public.refresh_tokens
     ADD CONSTRAINT uq_refresh_token UNIQUE (token_hash);
-
-
---
--- Name: user_groups user_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.user_groups
-    ADD CONSTRAINT user_groups_pkey PRIMARY KEY (ug_uuid);
 
 
 --
@@ -34523,36 +34162,6 @@ CREATE INDEX ix_user_tokens_lookup ON public.user_tokens USING btree (user_uuid,
 --
 
 CREATE UNIQUE INDEX ux_user_tokens_token_hash ON public.user_tokens USING btree (token_hash);
-
-
---
--- Name: popular_events _RETURN; Type: RULE; Schema: public; Owner: postgres
---
-
-CREATE OR REPLACE VIEW public.popular_events AS
- SELECT e.name,
-    count(o.id) AS "訂單數",
-    sum(o.quantity) AS "總售出"
-   FROM (public.events e
-     JOIN public.orders o ON ((e.id = o.event_id)))
-  GROUP BY e.id
-  ORDER BY (sum(o.quantity)) DESC;
-
-
---
--- Name: orders orders_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.orders
-    ADD CONSTRAINT orders_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id);
-
-
---
--- Name: orders orders_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.orders
-    ADD CONSTRAINT orders_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id);
 
 
 --

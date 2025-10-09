@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  ticketsystemapi:
+  BandHub.AuthService:
     build:
       context: .
       dockerfile: .devcontainer/Dockerfile
@@ -13,7 +13,7 @@ services:
       - Email__From=noreply@tickets.local
       - Email__Username=
       - Email__Password=
-    container_name: ticketsystemapi
+    container_name: BandHub.AuthService
     ports:
       - "5000:5000"
     depends_on:
@@ -30,12 +30,12 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: qwer1@34
-      POSTGRES_DB: concert_test
+      POSTGRES_DB: TBHDB
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./document/concert_test_backup.sql:/docker-entrypoint-initdb.d/concert_test_backup.sql:ro
+      - ./document/TBHDB.sql:/docker-entrypoint-initdb.d/TBHDB.sql:ro
     networks:
       - devnet
 

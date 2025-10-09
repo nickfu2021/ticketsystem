@@ -1,6 +1,6 @@
-using TicketSystemApi.Models;
+using BandHub.AuthService.Models;
 
-namespace TicketSystemApi.Repositories;
+namespace BandHub.AuthService.Repositories;
 
 public interface IAuthRepository
 {

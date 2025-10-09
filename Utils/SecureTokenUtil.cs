@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace TicketSystemApi.Utils;
+namespace BandHub.AuthService.Utils;
 
 public static class SecureTokenUtil
 {

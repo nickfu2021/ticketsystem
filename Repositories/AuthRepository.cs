@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using TicketSystemApi.Data;
-using TicketSystemApi.Models;
-using TicketSystemApi.Repositories;
+using BandHub.AuthService.Data;
+using BandHub.AuthService.Models;
+using BandHub.AuthService.Repositories;
 
-namespace TicketSystemApi.Repositories;
+namespace BandHub.AuthService.Repositories;
 
 public class AuthRepository(AppDbContext context) : IAuthRepository
 {
@@ -11,7 +11,7 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
 
     public async Task<User?> GetUserByEmailAsync(string email)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        return await _context.Users.FirstOrDefaultAsync(u => EF.Functions.ILike(u.Email, email));
     }
     public async Task<User?> GetUserByUuidAsync(Guid guid)
     {
@@ -19,10 +19,10 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
     }
 
     // 建立使用者
-    public async Task CreateUserAsync(User user)
+    public Task CreateUserAsync(User user)
     {
         _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        return Task.CompletedTask;
     }
     public async Task<bool> EmailExistsAsync(string email)
     {
@@ -37,10 +37,10 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
         return await _context.Users.AnyAsync(u => u.MobileNumber == mobileNumber);
     }
 
-    public async Task AddRefreshTokenAsync(RefreshToken token)
+    public Task AddRefreshTokenAsync(RefreshToken token)
     {
         _context.RefreshTokens.Add(token);
-        await _context.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 
     public async Task<RefreshToken?> GetActiveRefreshTokenByHashAsync(string tokenHash)
@@ -52,6 +52,7 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
 
     public Task RevokeRefreshTokenAsync(RefreshToken token, string reason, string? replacedByHash = null)
     {
+        token.IsActive = false;
         token.RevokedAt = DateTime.UtcNow;
         token.RevokedReason = reason;
         token.ReplacedBy = replacedByHash;
@@ -68,7 +69,7 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
     // 建立驗證 email token
     public async Task AddEmailVerificationTokenAsync(UserToken token)
     {
-        // 可選：先撤銷舊的同類型未使用 token（確保唯一）
+        // 撤銷舊的同類型未使用 token（情況:重複寄驗證信）
         var activeToken = await _context.UserTokens
             .Where(x => x.UserUuid == token.UserUuid &&
                         x.Purpose == "email_verify" &&
@@ -82,8 +83,8 @@ public class AuthRepository(AppDbContext context) : IAuthRepository
             activeToken.RevokedAt = DateTime.UtcNow;
         }
 
-        await _context.UserTokens.AddAsync(token);
-        await _context.SaveChangesAsync();
+        // 補上新的一筆 token
+        _context.UserTokens.Add(token);
     }
 
     // email token 是否存在

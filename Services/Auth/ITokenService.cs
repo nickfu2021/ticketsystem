@@ -1,4 +1,4 @@
-namespace TicketSystemApi.Services.Auth;
+namespace BandHub.AuthService.Services.Auth;
 
 public interface ITokenService
 {

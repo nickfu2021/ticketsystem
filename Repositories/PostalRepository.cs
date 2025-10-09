@@ -1,7 +1,7 @@
-using TicketSystemApi.Data;
+using BandHub.AuthService.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace TicketSystemApi.Repositories;
+namespace BandHub.AuthService.Repositories;
 
 public class PostalRepository(AppDbContext context) : IPostalRepository
 {

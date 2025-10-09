@@ -1,11 +1,11 @@
 using System.Data;
 using FluentValidation;
-using TicketSystemApi.Data;
-using TicketSystemApi.Dtos;
+using BandHub.AuthService.Data;
+using BandHub.AuthService.Dtos;
 using Microsoft.EntityFrameworkCore;
-using TicketSystemApi.Services;
+using BandHub.AuthService.Services;
 
-namespace TicketSystemApi.validators;
+namespace BandHub.AuthService.Validators;
 
 public class RegisterDtoValidator : AbstractValidator<RegisterDto>
 {

@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TicketSystemApi.Repositories
+namespace BandHub.AuthService.Repositories
 {
     public interface IPostalRepository
     {

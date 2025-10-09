@@ -1,6 +1,6 @@
-using TicketSystemApi.Common;
+using BandHub.AuthService.Common;
 
-namespace TicketSystemApi.Middleware;
+namespace BandHub.AuthService.Middleware;
 
 // ApiExceptionMiddleware 的角色
 // 它是你的「最後一道保險網」：

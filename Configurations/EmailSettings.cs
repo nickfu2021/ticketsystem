@@ -1,4 +1,4 @@
-namespace TicketSystemApi.Configurations;
+namespace BandHub.AuthService.Configurations;
 
 public class EmailSettings
 {

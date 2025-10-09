@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace TicketSystemApi.Models;
+namespace BandHub.AuthService.Models;
 
 
 [Table("user_tokens")]

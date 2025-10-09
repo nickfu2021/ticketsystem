@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TicketSystemApi.Models;
+namespace BandHub.AuthService.Models;
 
 [Table("users")]
 public class User

@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicketSystemApi", "TicketSystemApi.csproj", "{8CC8D5BD-35C5-6BF4-B8B7-BE642225F19A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BandHub.AuthService", "BandHub.AuthService.csproj", "{4E71B08B-3B7C-A4F5-C7C3-D374265627BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,15 +10,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8CC8D5BD-35C5-6BF4-B8B7-BE642225F19A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8CC8D5BD-35C5-6BF4-B8B7-BE642225F19A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8CC8D5BD-35C5-6BF4-B8B7-BE642225F19A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8CC8D5BD-35C5-6BF4-B8B7-BE642225F19A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E71B08B-3B7C-A4F5-C7C3-D374265627BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E71B08B-3B7C-A4F5-C7C3-D374265627BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E71B08B-3B7C-A4F5-C7C3-D374265627BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E71B08B-3B7C-A4F5-C7C3-D374265627BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {557FCAE6-291F-47BA-BD6F-359E2BC0A3FF}
+		SolutionGuid = {32A55EF2-A991-4A8F-A7F6-0B363302EDFB}
 	EndGlobalSection
 EndGlobal

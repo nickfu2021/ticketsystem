@@ -9,10 +9,17 @@ SELECT * FROM refresh_tokens;
 
 SELECT * FROM users;
 
--- DELETE FROM users WHERE user_uuid='501632eb-e25c-4afb-a619-a8a16c6af7c4';
+SELECT * FROM postal;
+
+-- DELETE FROM users WHERE user_uuid='2e140e62-ff09-43ae-bd8b-0d78a784934b';
 
 -- 刪除資料並重置 PRIMARY KEY
 -- TRUNCATE TABLE users RESTART IDENTITY;
+
+-- 連鎖刪除，連同View也一起刪除
+-- DROP TABLE user_groups CASCADE;
+
+
 
 -- 用 INSERT INTO users (id, ...) VALUES (1, ...) 插了幾筆測試資料
 -- 結果 PostgreSQL 自動遞增的序列還停留在 1

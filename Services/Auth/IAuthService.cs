@@ -1,7 +1,7 @@
-using TicketSystemApi.Common;
-using TicketSystemApi.Dtos;
+using BandHub.AuthService.Common;
+using BandHub.AuthService.Dtos;
 
-namespace TicketSystemApi.Services.Auth;
+namespace BandHub.AuthService.Services.Auth;
 
 public interface IAuthService
 {

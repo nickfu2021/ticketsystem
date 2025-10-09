@@ -1,4 +1,4 @@
-namespace TicketSystemApi.Dtos;
+namespace BandHub.AuthService.Dtos;
 
 public class LoginDto
 {

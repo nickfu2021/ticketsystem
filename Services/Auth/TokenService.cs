@@ -3,11 +3,11 @@ using System.Security.Claims;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using TicketSystemApi.Common;
+using BandHub.AuthService.Common;
 using System.IdentityModel.Tokens.Jwt;
-using TicketSystemApi.Configurations;
+using BandHub.AuthService.Configurations;
 
-namespace TicketSystemApi.Services.Auth;
+namespace BandHub.AuthService.Services.Auth;
 
 
 public class TokenService(IOptions<JwtSettings> jwt) : ITokenService
